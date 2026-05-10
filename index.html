@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLRA 工具分发平台</title>
+
+    <!-- 外部样式文件 -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Font Awesome for icons - 使用镜像源 -->
+    <link rel="stylesheet" href="https://fontawesome.ywxmz.com/7.2.0/css/all.min.css">
+
+    <!-- 网站设置样式 -->
+    <style>
+        /* 菜单按钮 */
+        .settings-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            font-size: 18px;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .settings-toggle:hover {
+            background: var(--accent-color);
+            color: #fff;
+            transform: scale(1.08);
+        }
+
+        .settings-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .settings-toggle.active {
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        .settings-toggle:focus-visible {
+            box-shadow: 0 0 0 2px var(--accent-color);
+        }
+
+        /* 下拉面板 */
+        .settings-panel {
+            position: fixed;
+            top: 76px;
+            right: 20px;
+            width: 380px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .settings-panel.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-radius: 14px 14px 0 0;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .settings-header i {
+            margin-right: 8px;
+        }
+
+        .settings-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px 8px;
+            font-size: 15px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .settings-close:hover {
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+
+        /* 控制行区域 */
+        .settings-controls {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+
+        .settings-row>span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-row>span i {
+            width: 18px;
+            text-align: center;
+        }
+
+        /* 行内小按钮 */
+        .settings-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: inherit;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .settings-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .settings-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 缓存指示点 */
+        .cache-indicator {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .cache-fresh {
+            background: #28a745;
+        }
+
+        .cache-stale {
+            background: #ffc107;
+        }
+
+        .cache-error {
+            background: #dc3545;
+        }
+
+        .cache-time {
+            font-size: 13px;
+            opacity: 0.85;
+            white-space: nowrap;
+        }
+
+        /* 调试日志内的缓存状态子项 */
+        .debug-cache-row {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cache-warning-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            font-size: 12px;
+            color: #ff9500;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(255, 149, 0, 0.05);
+        }
+
+        /* 调试日志区域 */
+        .debug-section {
+            border-top: 1px solid var(--border-color);
+            border-radius: 0 0 14px 14px;
+            overflow: hidden;
+        }
+
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .debug-header button {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: inherit;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .debug-header button:hover {
+            background: var(--bg-secondary);
+        }
+
+        .debug-content {
+            padding: 0 20px 14px;
+            max-height: 360px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-size: 12px;
+            line-height: 1.7;
+            word-break: break-all;
+        }
+
+        .debug-content:empty {
+            padding: 0;
+        }
+
+        .debug-content div {
+            font-size: 12px;
+        }
+
+        .debug-content div span:first-child {
+            font-size: 11px;
+        }
+
+        /* 小屏适配 */
+        @media (max-width: 480px) {
+            .settings-panel {
+                right: 8px;
+                left: 8px;
+                width: auto;
+            }
+        }
+
+        /* 滚动条美化 */
+        .debug-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .debug-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .debug-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- 菜单按钮 -->
+    <div class="settings-toggle" id="settingsToggle" role="button" tabindex="0" aria-label="打开菜单">
+        <i class="fas fa-ellipsis"></i>
+    </div>
+
+    <!-- 网站设置 -->
+    <div class="settings-panel" id="settingsPanel" role="dialog" aria-label="网站设置">
+        <div class="settings-header">
+            <span><i class="fas fa-sliders"></i>网站设置</span>
+            <button class="settings-close" id="settingsClose" aria-label="关闭"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="settings-controls">
+            <div class="settings-row">
+                <span><i class="fas fa-palette"></i> 外观主题</span>
+                <button class="settings-btn" id="themeToggle">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                    <span id="themeLabel">浅色</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 调试日志 -->
+        <div class="debug-section">
+            <div class="debug-header">
+                <span><i class="fas fa-bug" style="margin-right:8px;font-size:15px;"></i>调试日志</span>
+            </div>
+
+            <div class="settings-row debug-cache-row" id="cacheStatusRow">
+                <span><i class="fas fa-database"></i> 加载中...</span>
+            </div>
+
+            <div class="debug-content" id="debugContent"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-tools"></i> CLRA 工具分发平台</h1>
+            <p>抓牢学生机房学习主权，发现并下载优质工具</p>
+        </header>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在加载工具列表...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>加载失败</h3>
+            <p>无法加载工具列表，请检查网络连接或联系管理员</p>
+
+            <div class="cors-info">
+                <h4><i class="fas fa-info-circle"></i> 常见加载问题</h4>
+                <ul>
+                    <li><strong>跨域请求被阻止</strong> - 服务器需要配置 CORS 策略</li>
+                    <li><strong>网络连接失败</strong> - 检查网络连接和域名是否可达</li>
+                    <li><strong>工具清单不存在</strong> - 确认域名下有 clra_manifest.json 或 jfkl_manifest.json 文件</li>
+                    <li><strong>泛域名解析失败</strong> - 检查域名格式是否正确</li>
+                </ul>
+                <p style="margin-top: 10px;">点击右上角的 <i class="fas fa-ellipsis"></i> 按钮查看调试信息</p>
+            </div>
+        </div>
+
+        <div class="tools-grid" id="toolsGrid"></div>
+
+        <footer>
+            <p>&copy; 2026 CLRA 工具分发平台</p>
+        </footer>
+    </div>
+
+    <script>
+        (() => {
+            'use strict';
+
+            // ==================== 常量 ====================
+
+            const MANIFEST_TYPES = ['clra_manifest', 'jfkl_manifest'];
+            const MANIFEST_FILES = ['clra_manifest.json', 'jfkl_manifest.json'];
+            const LOG_TYPE_COLORS = Object.freeze({
+                error: '#ef4444',
+                warn: '#f59e0b',
+                success: '#10b981',
+                info: '#3b82f6',
+            });
+            const WILDCARD_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            const MAX_DEBUG_ENTRIES = 50;
+
+            // ==================== DOM 元素缓存 ====================
+
+            const $ = id => document.getElementById(id);
+
+            /** @type {Record<string, HTMLElement>} */
+            const dom = {};
+
+            /** 一次性缓存所有需要频繁访问的 DOM 元素 */
+            const cacheDom = () => {
+                const ids = [
+                    'settingsToggle', 'settingsPanel', 'settingsClose',
+                    'themeToggle', 'themeIcon', 'themeLabel',
+                    'clearDebug', 'debugContent', 'cacheStatusRow',
+                    'toolsGrid', 'loading', 'errorMessage',
+                ];
+                for (const id of ids) dom[id] = $(id);
+            };
+
+            // ==================== 应用状态 ====================
+
+            const state = {
+                wildcardCache: new Map(),
+                tools: [],
+                theme: localStorage.getItem('theme') || 'light',
+                debugLogs: [],
+                panelOpen: false,
+                debugRafPending: false,
+            };
+
+            // ==================== 通用工具函数 ====================
+
+            /** 复用单个 DOM 元素做 textContent → innerHtml 转义，避免反复 createElement */
+            const escapeHtml = (() => {
+                const el = document.createElement('div');
+                return text => { el.textContent = text; return el.innerHTML; };
+            })();
+
+            /** 为 URL 补全协议前缀 */
+            const processUrl = (url, useHttps = true) => {
+                if (!url) return '';
+                if (url.startsWith('http://') || url.startsWith('https://')) return url;
+                return useHttps ? `https://${url}` : `http://${url}`;
+            };
+
+            /** 确定性伪随机字符串生成器，用于泛域名星号替换 */
+            const generateFixedWildcardString = domain => {
+                let hash = 0;
+                for (let i = 0; i < domain.length; i++) {
+                    hash = ((hash << 5) - hash) + domain.charCodeAt(i);
+                    hash = hash & hash;
+                }
+                let result = '';
+                let seed = Math.abs(hash);
+                for (let j = 0; j < 16; j++) {
+                    seed = (seed * 9301 + 49297) % 233280;
+                    result += WILDCARD_CHARS[seed % WILDCARD_CHARS.length];
+                }
+                return result;
+            };
+
+            /** 泛域名解析（带 Map 缓存） */
+            const processWildcardDomain = domain => {
+                if (!domain.includes('*')) return domain;
+                const cached = state.wildcardCache.get(domain);
+                if (cached !== undefined) {
+                    debug.log(`从缓存获取泛域名解析: ${domain} -> ${cached}`);
+                    return cached;
+                }
+                const processed = domain.replace(/\*/g, generateFixedWildcardString(domain));
+                state.wildcardCache.set(domain, processed);
+                debug.log(`泛域名解析: ${domain} -> ${processed}`);
+                return processed;
+            };
+
+            /** 解析 download_url 字段，统一输出为 { text, url } 数组 */
+            const parseDownloadUrls = downloadUrl => {
+                if (!downloadUrl) return [];
+
+                const parseSingle = str => {
+                    const idx = str.indexOf(':');
+                    if (idx !== -1) return { text: str.substring(0, idx).trim(), url: str.substring(idx + 1).trim() };
+                    return { text: '下载', url: str };
+                };
+
+                if (typeof downloadUrl === 'string') return [parseSingle(downloadUrl)];
+                if (Array.isArray(downloadUrl)) {
+                    return downloadUrl.map(item => {
+                        if (typeof item === 'string') return parseSingle(item);
+                        return { text: item.text || '下载', url: item.url || '' };
+                    });
+                }
+                return [];
+            };
+
+            // ==================== 调试模块 ====================
+
+            const debug = {
+                /** 写入一条日志并同步到 console */
+                log(message, type = 'info') {
+                    const timestamp = new Date().toISOString();
+                    state.debugLogs.push({ timestamp, message, type });
+
+                    const fn = type === 'error' ? console.error
+                        : type === 'warn' ? console.warn
+                            : console.log;
+                    fn(`[CLRA] ${timestamp}: ${message}`);
+
+                    // 面板打开时，用 rAF 合并刷新，避免密集 DOM 操作
+                    if (state.panelOpen) this.scheduleRefresh();
+                },
+
+                scheduleRefresh() {
+                    if (state.debugRafPending) return;
+                    state.debugRafPending = true;
+                    requestAnimationFrame(() => {
+                        this.refreshPanel();
+                        state.debugRafPending = false;
+                    });
+                },
+
+                /** 将最近日志渲染到调试面板 */
+                refreshPanel() {
+                    const recent = state.debugLogs.slice(-MAX_DEBUG_ENTRIES);
+                    const html = recent.map(({ timestamp, message, type }) => {
+                        const color = LOG_TYPE_COLORS[type] || LOG_TYPE_COLORS.info;
+                        return `<div style="margin-bottom:5px;padding:5px 8px;border-left:3px solid ${color};background:rgba(128,128,128,0.06);border-radius:0 4px 4px 0;">`
+                            + `<span style="color:#888;">${timestamp}</span>`
+                            + `<span style="margin-left:8px;">${escapeHtml(message)}</span></div>`;
+                    }).join('');
+
+                    const el = dom.debugContent;
+                    if (el) {
+                        el.innerHTML = html;
+                        el.scrollTop = el.scrollHeight;
+                    }
+                }
+            };
+
+            // ==================== 设置面板模块 ====================
+
+            const settingsPanel = {
+                open() {
+                    state.panelOpen = true;
+                    dom.settingsPanel.classList.add('open');
+                    dom.settingsToggle.classList.add('active');
+                    debug.refreshPanel();
+                },
+                close() {
+                    state.panelOpen = false;
+                    dom.settingsPanel.classList.remove('open');
+                    dom.settingsToggle.classList.remove('active');
+                },
+                toggle() {
+                    state.panelOpen ? this.close() : this.open();
+                },
+            };
+
+            // ==================== 主题模块 ====================
+
+            const themeManager = {
+                /** 根据当前 state.theme 同步 DOM 状态 */
+                apply() {
+                    const isDark = state.theme === 'dark';
+                    document.body.classList.toggle('dark-theme', isDark);
+                    if (dom.themeIcon) dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    if (dom.themeLabel) dom.themeLabel.textContent = isDark ? '深色' : '浅色';
+                },
+                /** 切换主题并持久化 */
+                toggle() {
+                    state.theme = state.theme === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('theme', state.theme);
+                    this.apply();
+                },
+            };
+
+            // ==================== 工具卡片渲染 ====================
+
+            /** 根据工具数据生成单张卡片 HTML */
+            const createToolCard = tool => {
+                const {
+                    name, developer, description, version,
+                    update_content, url, download_url, icon_url,
+                    isError, _fallback_loaded,
+                } = tool;
+                const isFallback = _fallback_loaded === true;
+
+                // 预计算视觉参数
+                const iconBg = isError ? 'rgba(220,53,69,0.1)' : 'var(--bg-secondary)';
+                const iconClass = isError ? 'fas fa-exclamation-triangle' : isFallback ? 'fas fa-wifi' : 'fas fa-cogs';
+                const iconColor = isError ? '#dc3545' : isFallback ? '#ff9500' : 'var(--accent-color)';
+                const nameColor = isError ? '#dc3545' : 'var(--text-primary)';
+                const descColor = isError ? '#dc3545' : 'var(--text-secondary)';
+                const badgeBg = isError ? '#dc3545' : isFallback ? '#ff9500' : 'var(--accent-color)';
+                const badgeText = isError ? '错误' : isFallback ? '实时' : `v${escapeHtml(version)}`;
+                const cardClass = isError ? 'tool-card error-card' : isFallback ? 'tool-card fallback-card' : 'tool-card';
+
+                const escapedName = escapeHtml(name);
+                const escapedDesc = escapeHtml(description).replace(/\\n/g, '<br>');
+                const escapedUpdate = update_content ? escapeHtml(update_content) : '';
+                const iconUrl = icon_url ? processUrl(processWildcardDomain(icon_url)) : null;
+                const projectUrl = url ? processUrl(processWildcardDomain(url)) : null;
+
+                // 图标区域
+                const iconHtml = iconUrl
+                    ? `<img src="${iconUrl}" alt="${escapedName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`
+                    + `<i class="${iconClass}" style="display:none;color:${iconColor};"></i>`
+                    : `<i class="${iconClass}" style="display:flex;color:${iconColor};"></i>`;
+
+                // 下载按钮
+                const dlHtml = parseDownloadUrls(download_url).map(btn => {
+                    const href = escapeHtml(processUrl(processWildcardDomain(btn.url)));
+                    return `<a href="${href}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">`
+                        + `<i class="fas fa-download"></i> ${escapeHtml(btn.text)}</a>`;
+                }).join('');
+
+                // 项目主页按钮
+                const projectBtn = !isError && projectUrl
+                    ? `<a href="${escapeHtml(projectUrl)}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">`
+                    + `<i class="fas fa-external-link-alt"></i> 项目主页</a>`
+                    : '';
+
+                // 更新内容
+                const updateHtml = escapedUpdate
+                    ? `<div class="update-content"><strong>更新内容:</strong><br>${escapedUpdate}</div>`
+                    : '';
+
+                // 回退标记
+                const fallbackTag = isFallback
+                    ? '<span class="developer" style="color:#ff9500;">(回退加载)</span>'
+                    : '';
+
+                return `<div class="${cardClass}">`
+                    + `<div class="tool-header">`
+                    + `<div class="tool-icon" style="background:${iconBg};">${iconHtml}</div>`
+                    + `<div class="tool-info">`
+                    + `<h3 style="color:${nameColor};">${escapedName}</h3>`
+                    + `<div class="tool-meta">`
+                    + `<span class="version-badge" style="background:${badgeBg};">${badgeText}</span>`
+                    + `<span class="developer">by ${escapeHtml(developer)}</span>${fallbackTag}`
+                    + `</div>`
+                    + `</div>`
+                    + `</div>`
+                    + `<div class="tool-description" style="color:${descColor};">${escapedDesc}</div>`
+                    + updateHtml
+                    + `<div class="tool-actions">${projectBtn}${dlHtml}</div>`
+                    + `</div>`;
+            };
+
+            /** 渲染所有工具卡片 */
+            const renderTools = () => {
+                if (state.tools.length === 0) {
+                    dom.loading.classList.remove('active');
+                    dom.errorMessage.classList.add('active');
+                    return;
+                }
+                dom.toolsGrid.innerHTML = state.tools.map(createToolCard).join('');
+                dom.loading.classList.remove('active');
+            };
+
+            // ==================== 数据加载 ====================
+
+            /** 尝试通过单一协议请求清单，404 返回 null，其他错误抛异常 */
+            const tryFetchManifest = async (domain, filename, protocol) => {
+                const url = `${protocol}://${domain}/${filename}`;
+                debug.log(`回退: 正在尝试${protocol.toUpperCase()}加载清单: ${url}`);
+                const res = await fetch(url, { mode: 'cors', headers: { Accept: 'application/json' } });
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        debug.log(`回退: 清单文件不存在: ${url}`, 'warn');
+                        return null;
+                    }
+                    throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+                }
+                const manifest = await res.json();
+                debug.log(`回退: 成功加载清单(${protocol.toUpperCase()}): ${domain} (${filename})`, 'success');
+                manifest._fallback_loaded = true;
+                return manifest;
+            };
+
+            /** 先尝试本地缓存，失败则回退到直接请求 */
+            const fetchManifestFromCache = async domain => {
+                try {
+                    const safeDomain = domain.replace(/[\\/:*?"<>|.-]/g, '_');
+                    let cachedData = null;
+                    let usedCacheFile = null;
+
+                    for (const type of MANIFEST_TYPES) {
+                        const fileName = `${safeDomain}_${type}.json`;
+                        const cacheUrl = `/manifest-cache/domains/${fileName}`;
+                        debug.log(`正在从缓存加载清单: ${cacheUrl}`);
+                        try {
+                            const res = await fetch(cacheUrl);
+                            if (res.ok) {
+                                cachedData = await res.json();
+                                usedCacheFile = fileName;
+                                break;
+                            }
+                        } catch { /* 缓存文件不存在，继续 */ }
+                    }
+
+                    if (!cachedData) throw new Error(`没有找到缓存文件: ${domain}`);
+                    debug.log(`成功从缓存加载工具: ${cachedData.name} (缓存文件: ${usedCacheFile})`, 'success');
+                    return cachedData;
+                } catch (error) {
+                    debug.log(`缓存加载失败 ${domain}: ${error.message}`, 'warn');
+                    debug.log(`正在回退到直接请求原始服务器: ${domain}`);
+                    return fetchManifestDirect(domain);
+                }
+            };
+
+            /** 直接请求远程清单：对每种文件依次尝试 HTTPS → HTTP */
+            const fetchManifestDirect = async domain => {
+                const processedDomain = processWildcardDomain(domain);
+                let lastError = null;
+
+                for (const filename of MANIFEST_FILES) {
+                    // 先尝试 HTTPS
+                    try {
+                        const result = await tryFetchManifest(processedDomain, filename, 'https');
+                        if (result) return result;
+                        // HTTPS 返回 404，直接尝试下一个文件
+                    } catch (httpsErr) {
+                        debug.log(`回退: HTTPS请求失败，尝试HTTP: ${httpsErr.message}`, 'warn');
+                        // HTTPS 其他错误，尝试 HTTP
+                        try {
+                            const result = await tryFetchManifest(processedDomain, filename, 'http');
+                            if (result) return result;
+                        } catch (httpErr) {
+                            debug.log(`回退: HTTP请求也失败: ${httpErr.message}`, 'warn');
+                            lastError = httpsErr;
+                        }
+                    }
+                }
+
+                // 构造可读错误信息
+                let errorMsg = lastError ? lastError.message : '未知错误';
+                if (errorMsg.includes('CORS') || errorMsg.includes('Access-Control-Allow-Origin')) {
+                    errorMsg = '跨域请求被阻止 - 请联系工具提供者配置 CORS 策略';
+                } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('network')) {
+                    errorMsg = '网络连接失败 - 请检查网络连接或域名是否可达';
+                } else if (errorMsg.includes('HTTP 404') || errorMsg.includes('清单文件不存在')) {
+                    errorMsg = '工具清单文件不存在 - 请确认域名下有 clra_manifest.json 或 jfkl_manifest.json 文件';
+                }
+                debug.log(`回退: 加载清单失败 ${domain}: ${errorMsg}`, 'error');
+
+                return {
+                    name: `加载失败: ${domain}`,
+                    developer: '系统',
+                    version: 'N/A',
+                    description: `无法加载此工具\n原因: ${errorMsg}\n\n请检查:\n1. 网络连接是否正常\n2. 域名配置是否正确\n3. 域名下是否有 clra_manifest.json 或 jfkl_manifest.json 文件\n4. 联系工具提供者解决CORS问题`,
+                    update_content: null,
+                    url: null,
+                    download_url: [],
+                    icon_url: null,
+                    isError: true,
+                };
+            };
+
+            /** 加载域名配置文件 */
+            const loadConfig = async () => {
+                try {
+                    debug.log('正在加载配置文件: clra_urls.txt');
+                    const res = await fetch('./clra_urls.txt');
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const domains = (await res.text())
+                        .split('\n')
+                        .map(l => l.trim())
+                        .filter(l => l && !l.startsWith('#'));
+                    debug.log(`成功加载 ${domains.length} 个域名配置`, 'success');
+                    return domains;
+                } catch (error) {
+                    debug.log(`加载配置文件失败: ${error.message}`, 'error');
+                    return [];
+                }
+            };
+
+            /** 加载缓存元数据 */
+            const loadCacheMetadata = async () => {
+                try {
+                    debug.log('正在加载缓存元数据');
+                    const res = await fetch('/manifest-cache/metadata.json');
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const metadata = await res.json();
+                    debug.log(`缓存元数据加载成功，最后同步时间: ${metadata.last_sync}`, 'success');
+                    return metadata;
+                } catch (error) {
+                    debug.log(`缓存元数据加载失败: ${error.message}`, 'warn');
+                    return null;
+                }
+            };
+
+            /** 更新缓存状态行 UI */
+            const updateCacheStatus = metadata => {
+                const row = dom.cacheStatusRow;
+                if (!row) return;
+
+                if (!metadata) {
+                    row.innerHTML = '<span><i class="fas fa-database"></i> <span class="cache-indicator cache-error"></span> 缓存不可用</span>'
+                        + '<span class="cache-time">元数据加载失败</span>';
+                    return;
+                }
+
+                const lastSync = new Date(metadata.last_sync);
+                const diffHours = Math.floor((Date.now() - lastSync.getTime()) / 3600000);
+
+                let statusClass, statusText;
+                if (diffHours > 24) { statusClass = 'cache-error'; statusText = '缓存过期'; }
+                else if (diffHours > 2) { statusClass = 'cache-stale'; statusText = '缓存较旧'; }
+                else { statusClass = 'cache-fresh'; statusText = '缓存正常'; }
+
+                row.innerHTML = `<span><i class="fas fa-database"></i> ${statusText} <span class="cache-indicator ${statusClass}"></span></span>`
+                    + `<span class="cache-time">${lastSync.toISOString()}</span>`;
+            };
+
+            // ==================== 事件绑定 ====================
+
+            const bindEvents = () => {
+                // 点击外部关闭设置面板
+                document.addEventListener('click', e => {
+                    const { settingsPanel: panel, settingsToggle: toggle } = dom;
+                    if (panel && toggle && !panel.contains(e.target) && !toggle.contains(e.target)) {
+                        settingsPanel.close();
+                    }
+                });
+
+                // 设置面板内部阻止冒泡
+                dom.settingsPanel.addEventListener('click', e => e.stopPropagation());
+
+                // 菜单按钮
+                dom.settingsToggle.addEventListener('click', e => {
+                    e.stopPropagation();
+                    settingsPanel.toggle();
+                });
+
+                // 键盘支持：Enter 激活菜单按钮，Escape 关闭面板
+                dom.settingsToggle.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        settingsPanel.toggle();
+                    }
+                });
+
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape' && state.panelOpen) settingsPanel.close();
+                });
+
+                // 关闭按钮
+                dom.settingsClose.addEventListener('click', () => settingsPanel.close());
+
+                // 主题切换
+                dom.themeToggle.addEventListener('click', () => themeManager.toggle());
+            };
+
+            // ==================== 初始化 ====================
+
+            const init = async () => {
+                dom.loading.classList.add('active');
+
+                try {
+                    debug.log('应用初始化开始');
+
+                    // 元数据和配置互相独立，并行加载
+                    const [metadata, domains] = await Promise.all([
+                        loadCacheMetadata(),
+                        loadConfig(),
+                    ]);
+
+                    updateCacheStatus(metadata);
+
+                    if (domains.length === 0) throw new Error('没有找到有效的域名配置');
+
+                    // 并行请求所有域名清单
+                    const manifests = await Promise.all(domains.map(fetchManifestFromCache));
+
+                    // 按 name 去重（保持首次出现的优先）
+                    const seen = new Set();
+                    const uniqueTools = [];
+                    for (const m of manifests) {
+                        if (!m) continue;
+                        if (seen.has(m.name)) {
+                            debug.log(`发现重复工具: ${m.name}，已跳过`, 'warn');
+                            continue;
+                        }
+                        seen.add(m.name);
+                        uniqueTools.push(m);
+                    }
+                    state.tools = uniqueTools;
+
+                    // 统计各类工具数量（单次遍历）
+                    let cachedCount = 0, fallbackCount = 0, errorCount = 0;
+                    for (const t of state.tools) {
+                        if (t.isError) errorCount++;
+                        else if (t._fallback_loaded) fallbackCount++;
+                        else cachedCount++;
+                    }
+                    debug.log(`加载完成: 缓存工具 ${cachedCount} 个, 回退工具 ${fallbackCount} 个, 错误工具 ${errorCount} 个`, 'success');
+
+                    // 回退警告
+                    if (fallbackCount > 0 && dom.cacheStatusRow) {
+                        const warning = document.createElement('div');
+                        warning.className = 'cache-warning-row';
+                        warning.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${fallbackCount} 个工具使用实时加载`;
+                        dom.cacheStatusRow.after(warning);
+                    }
+
+                    renderTools();
+                } catch (error) {
+                    debug.log(`初始化失败: ${error.message}`, 'error');
+                    dom.loading.classList.remove('active');
+                    dom.errorMessage.classList.add('active');
+                }
+            };
+
+            // ==================== 入口 ====================
+
+            document.addEventListener('DOMContentLoaded', () => {
+                cacheDom();
+                themeManager.apply();
+                bindEvents();
+                init();
+            });
+
+        })();
+    </script>
+</body>
+
+</html>

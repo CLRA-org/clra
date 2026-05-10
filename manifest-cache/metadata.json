@@ -1,0 +1,29 @@
+{
+  "last_sync": "2026-05-09T22:41:42.850Z",
+  "total_tools": 4,
+  "domains": [
+    {
+      "domain": "clib.cc.cd",
+      "cache_file": "clib_cc_cd_clra_manifest.json",
+      "tool_name": "Classroom Liberator",
+      "version": "B11"
+    },
+    {
+      "domain": "maxlhy0424.is-a.dev",
+      "cache_file": "maxlhy0424_is_a_dev_clra_manifest.json",
+      "tool_name": "SCLTK",
+      "version": "7.1.5"
+    },
+    {
+      "domain": "*.pp1p.cfd",
+      "cache_file": "__pp1p_cfd_clra_manifest.json",
+      "tool_name": "ClassZero",
+      "version": "1.4.1"
+    },
+    {
+      "domain": "*.jfglss.icu",
+      "cache_file": "__jfglss_icu_clra_manifest.json"
+    }
+  ],
+  "version": "1.0.0"
+}

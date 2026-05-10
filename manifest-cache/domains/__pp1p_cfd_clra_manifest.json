@@ -1,0 +1,12 @@
+{
+  "name": "ClassZero",
+  "developer": "Ptlcx2048",
+  "version": "1.4.1",
+  "update_content": "支持联网密码破解\n增强程序安全检测",
+  "description": "学生机房管理助手 工具箱\n支持 密码破解、密码修改、\n脱离控制、一键恢复等功能\n程序体积轻量不足1MB",
+  "url": "https://qw2A.pp1p.cfd",
+  "download_url": [
+    "最新版本:https://*.pp1p.cfd/soft/k.scr"
+  ],
+  "icon_url": "*.pp1p.cfd/cz.png"
+}

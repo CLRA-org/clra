@@ -1,0 +1,12 @@
+{
+  "version": "0.0.16",
+  "update_content": "机房抗联更新\n新增针对v12的功能\n完善form2解除\n增加在线功能面板",
+  "url": "*.jfglss.icu/",
+  "description": "机房管理杀手\n一款针对机房管理助手及极域电子教室的快速清理程序\n让您的机房时间回归本质",
+  "download_url": "jfglss:*.jfglss.icu/3.jpg",
+  "developer": "zmas cloud(一只白鸦)",
+  "name": "机房管理杀手",
+  "icon_url": "*.jfglss.icu/icon.ico",
+  "kl_url": "https://jfkl.pages.dev/jfkl_urls",
+  "kl_info": "txt"
+}

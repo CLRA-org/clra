@@ -1,0 +1,12 @@
+{
+  "name": "助手密码工具箱",
+  "developer": "lzh173",
+  "version": "1.3.1-B130b1",
+  "update_content": "修复部分问题",
+  "description": "一个专门针对机房管理助手及其密码破解的软件",
+  "url": "https://*.jpt.lzh173.chat",
+  "download_url": [
+    "B130B1版本下载://*.jpt.lzh173.chat/j.exe"
+  ],
+  "icon_url": "https://bk.lzh173.chat/jptico.ico"
+}
