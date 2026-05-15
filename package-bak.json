@@ -1,0 +1,17 @@
+{
+    "name": "clra-website",
+    "version": "1.0.0",
+    "description": "CLRA 工具分发平台",
+    "main": "index.html",
+    "scripts": {
+        "sync-manifests": "node sync-manifests.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "tools",
+        "distribution",
+        "clra"
+    ],
+    "author": "CLRA Team",
+    "license": "MIT"
+}
