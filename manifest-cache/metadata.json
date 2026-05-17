@@ -1,6 +1,6 @@
 {
-  "last_sync": "2026-05-17T14:26:55.651Z",
-  "total_tools": 3,
+  "last_sync": "2026-05-17T16:01:41.677Z",
+  "total_tools": 4,
   "domains": [
     {
       "domain": "clib.cc.cd",
@@ -19,6 +19,12 @@
       "cache_file": "__pp1p_cfd_clra_manifest.json",
       "tool_name": "ClassZero",
       "version": "1.4.1"
+    },
+    {
+      "domain": "sbzm.lzh173.chat",
+      "cache_file": "sbzm_lzh173_chat_clra_manifest.json",
+      "tool_name": "助手密码工具箱",
+      "version": "1.3.1-B130b1"
     }
   ],
   "version": "1.0.0"
