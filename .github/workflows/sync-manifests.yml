@@ -32,4 +32,4 @@ jobs:
           git add manifest-cache/
           git commit -m "Update manifest cache" || exit 0
           # 使用 GITHUB_TOKEN 进行推送
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/JumperTT/clra.git
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
