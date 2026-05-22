@@ -1,18 +1,12 @@
 {
-  "last_sync": "2026-05-22T09:36:09.892Z",
-  "total_tools": 3,
+  "last_sync": "2026-05-22T11:13:12.566Z",
+  "total_tools": 2,
   "domains": [
     {
       "domain": "clib.cc.cd",
       "cache_file": "clib_cc_cd_clra_manifest.json",
       "tool_name": "Classroom Liberator",
       "version": "B11"
-    },
-    {
-      "domain": "maxlhy0424.is-a.dev",
-      "cache_file": "maxlhy0424_is_a_dev_clra_manifest.json",
-      "tool_name": "SCLTK",
-      "version": "7.1.5"
     },
     {
       "domain": "sbzm.lzh173.chat",
