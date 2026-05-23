@@ -90,7 +90,10 @@
         .settings-panel.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
         .panel-head { display:flex; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border); font-weight:600; font-size:15px; }
         .panel-close { background:none; border:none; color:var(--text2); cursor:pointer; font-size:16px; }
+        .setting-section { border-bottom:1px solid var(--border); }
+        .section-head { padding:14px 22px 6px; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text2); }
         .setting-row { display:flex; flex-direction:column; padding:14px 22px; color:var(--text2); font-size:14px; gap:8px; border-bottom:1px solid var(--border); }
+        .setting-row:last-child { border-bottom:none; }
         .setting-row label { display:flex; align-items:center; gap:8px; font-weight:500; }
         .setting-row .setting-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
         .btn-sm { background:var(--btn-bg); border:1px solid var(--btn-border); color:var(--text); padding:6px 14px; border-radius:20px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; transition:all var(--transition); }
@@ -115,6 +118,58 @@
         .modal-license a { color:var(--accent); text-decoration:underline; }
         .modal-close-btn { background:var(--accent); color:#fff; border:none; padding:10px 28px; border-radius:8px; margin-top:24px; cursor:pointer; font-size:14px; font-weight:600; float:right; transition:background var(--transition); }
         .modal-close-btn:hover { background:var(--accent-hover); }
+
+        /* Cookie 横幅样式 */
+        .cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            padding: 20px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            z-index: 9999;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            font-size: 14px;
+            color: var(--text);
+            transition: transform 0.3s ease;
+        }
+        .cookie-banner.hidden {
+            transform: translateY(100%);
+            pointer-events: none;
+        }
+        .cookie-banner p {
+            margin: 0;
+            flex: 1 1 auto;
+            max-width: 600px;
+        }
+        .cookie-banner button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background var(--transition);
+        }
+        .cookie-banner button:hover {
+            background: var(--accent-hover);
+        }
+        .cookie-banner .cookie-reject {
+            background: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            color: var(--text);
+        }
+        .cookie-banner .cookie-reject:hover {
+            background: var(--btn-border);
+        }
 
         @media (max-width:768px) {
             .hamburger-btn { display:flex; }
@@ -202,22 +257,29 @@
             <span><i class="fas fa-sliders"></i> 设置</span>
             <button class="panel-close" id="panelClose"><i class="fas fa-times"></i></button>
         </div>
-        <div class="setting-row">
-            <label><i class="fas fa-palette"></i> 主题</label>
-            <div class="setting-control">
-                <button class="btn-sm" id="themeBtn">
-                    <i class="fas fa-moon" id="themeIcon"></i>
-                    <span id="themeLabel">浅色</span>
-                </button>
+
+        <!-- 外观分组 -->
+        <div class="setting-section">
+            <div class="section-head">外观</div>
+            <div class="setting-row">
+                <label><i class="fas fa-palette"></i> 主题</label>
+                <div class="setting-control">
+                    <button class="btn-sm" id="themeBtn">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                        <span id="themeLabel">浅色</span>
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <label><i class="fas fa-eyedropper"></i> 强调色</label>
+                <div class="setting-control">
+                    <input type="color" id="accentColorPicker" class="color-input" value="#0078D4">
+                    <span style="font-size:13px;">点击选择颜色</span>
+                </div>
             </div>
         </div>
-        <div class="setting-row">
-            <label><i class="fas fa-eyedropper"></i> 强调色</label>
-            <div class="setting-control">
-                <input type="color" id="accentColorPicker" class="color-input" value="#0078D4">
-                <span style="font-size:13px;">点击选择颜色</span>
-            </div>
-        </div>
+
+        <!-- 缓存状态分组 -->
         <div class="cache-section">
             <div class="cache-head">缓存状态</div>
             <div class="setting-row" id="cacheStatusRow">
@@ -230,6 +292,8 @@
                 <span>工具数量: --</span>
             </div>
         </div>
+
+        <!-- 调试日志分组 -->
         <div class="debug-section">
             <div class="debug-head">调试日志</div>
             <div class="debug-log" id="debugLog"></div>
@@ -252,6 +316,13 @@
         </div>
     </div>
 
+    <!-- Cookie 同意横幅（默认隐藏，由脚本控制显示） -->
+    <div id="cookieBanner" class="cookie-banner hidden">
+        <p>本网站使用 Cookie 及 Microsoft Clarity 进行匿名分析，以改善用户体验。继续使用即表示您同意我们使用这些技术。</p>
+        <button id="cookieAccept">接受</button>
+        <button id="cookieReject" class="cookie-reject">拒绝</button>
+    </div>
+
     <script>
         // 移动端菜单（动态定位，禁止背景滚动）
         (function() {
@@ -261,7 +332,6 @@
 
             function openMenu() {
                 menuOpen = true;
-                // 动态设置 top 为当前滚动位置
                 sidebar.style.top = window.scrollY + 'px';
                 sidebar.classList.add('open');
                 document.body.style.overflow = 'hidden';
@@ -288,7 +358,7 @@
             });
         })();
 
-        // 主逻辑（保持不变）
+        // 主功能逻辑
         (() => {
             const WILDCARD_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
             const LOG_COLORS = { error: '#ef4444', warn: '#f59e0b', success: '#10b981', info: '#3b82f6' };
@@ -315,6 +385,9 @@
                 emptyState: document.getElementById('emptyState'),
                 loading: document.getElementById('loading'),
                 errorMsg: document.getElementById('errorMsg'),
+                cookieBanner: document.getElementById('cookieBanner'),
+                cookieAccept: document.getElementById('cookieAccept'),
+                cookieReject: document.getElementById('cookieReject'),
             });
 
             const dom = cacheDom();
@@ -609,8 +682,7 @@
                 if (hours > 24) { cls = 'error'; text = '过期'; }
                 else if (hours > 2) { cls = 'stale'; text = '较旧'; }
                 else { cls = 'fresh'; text = '正常'; }
-                dom.cacheStatusRow.innerHTML = `<span><i class="fas fa-database"></i> ${text} <span class="cache-dot ${cls}"></span></span>
-                    <span class="cache-time">${last.toISOString()}</span>`;
+                dom.cacheStatusRow.innerHTML = `<span><i class="fas fa-database"></i> ${text} <span class="cache-dot ${cls}"></span></span>`;
                 dom.cacheDetailRow.innerHTML = `<span>最后同步: ${last.toLocaleString()}</span>`;
                 dom.toolCountRow.innerHTML = `<span>工具数量: ${meta.total_tools || 0}</span>`;
             };
@@ -641,11 +713,6 @@
                     }
                     log(`加载完成: 有效工具 ${tools.length}`, 'success');
 
-                    if (dom.toolCountRow) {
-                        const count = meta ? meta.total_tools : tools.length;
-                        dom.toolCountRow.innerHTML = `<span>工具数量: ${count}</span>`;
-                    }
-
                     const fallbackCount = tools.filter(t => t._fallback_loaded).length;
                     if (fallbackCount > 0 && dom.cacheStatusRow) {
                         const exist = document.querySelector('.cache-warning');
@@ -666,6 +733,102 @@
             };
 
             dom.refreshBtn.addEventListener('click', init);
+
+            // ---------- Clarity 与 Cookie 同意逻辑 ----------
+            const loadClarityScript = (id) => {
+                if (!id) return;
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.text = `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "${id}");`;
+                document.head.appendChild(script);
+                log(`Clarity 脚本已加载: ${id}`, 'info');
+            };
+
+            const getClarityId = () => {
+                const host = window.location.hostname;
+                if (host === 'clra1.lzh173.chat') return 'wvnsox7a0p';
+                if (host === 'jfdoc.xingying.us.kg') return 'wvnu22ps48';
+                return null;
+            };
+
+            const EU_COUNTRIES = [
+                'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
+                'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','CH'
+            ];
+
+            const isEUCountry = (code) => EU_COUNTRIES.includes(code.toUpperCase());
+
+            // 通过 IP 检测地理位置
+            const detectEUviaIP = () => {
+                return new Promise((resolve) => {
+                    const timeout = setTimeout(() => resolve(false), 3000);
+                    fetch('https://ipapi.co/json/')
+                        .then(res => res.ok ? res.json() : Promise.reject())
+                        .then(data => {
+                            clearTimeout(timeout);
+                            resolve(isEUCountry(data.country_code));
+                        })
+                        .catch(() => {
+                            clearTimeout(timeout);
+                            // 回退：语言检测（不精确但可用）
+                            const lang = navigator.language || navigator.userLanguage || '';
+                            const code = lang.split('-')[1] || lang.split('-')[0]?.toUpperCase();
+                            resolve(code ? isEUCountry(code) : false);
+                        });
+                });
+            };
+
+            const showCookieBanner = () => {
+                dom.cookieBanner.classList.remove('hidden');
+            };
+
+            const hideCookieBanner = () => {
+                dom.cookieBanner.classList.add('hidden');
+            };
+
+            const setCookieConsent = (accepted) => {
+                localStorage.setItem('cookieConsent', accepted ? 'accepted' : 'rejected');
+                hideCookieBanner();
+                if (accepted) {
+                    const clarityId = getClarityId();
+                    if (clarityId) loadClarityScript(clarityId);
+                }
+            };
+
+            // 初始化 Clarity 与 Cookie 逻辑
+            (async () => {
+                const clarityId = getClarityId();
+                if (!clarityId) {
+                    log('当前域名不加载 Clarity', 'info');
+                    return;
+                }
+
+                const existingConsent = localStorage.getItem('cookieConsent');
+                if (existingConsent === 'accepted') {
+                    loadClarityScript(clarityId);
+                    return;
+                }
+                if (existingConsent === 'rejected') {
+                    return; // 不再询问
+                }
+
+                // 检测是否欧盟
+                const isEU = await detectEUviaIP();
+                if (!isEU) {
+                    // 非欧盟直接加载
+                    loadClarityScript(clarityId);
+                    return;
+                }
+
+                // 欧盟地区且无记录：显示横幅
+                showCookieBanner();
+            })();
+
+            // 绑定按钮事件
+            dom.cookieAccept.addEventListener('click', () => setCookieConsent(true));
+            dom.cookieReject.addEventListener('click', () => setCookieConsent(false));
+
+            // 启动工具加载
             init();
         })();
     </script>
