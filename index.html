@@ -70,7 +70,7 @@
         .tool-card.fallback { border-color:rgba(245,158,11,0.3); }
         .tool-head { display:flex; gap:14px; margin-bottom:14px; }
         .tool-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--btn-bg); overflow:hidden; }
-        .tool-icon img { width:36px; height:36px; object-fit:contain; display:none; }
+        .tool-icon img { width:36px; height:36px; object-fit:contain; }
         .tool-icon i { font-size:24px; }
         .tool-info h3 { font-size:1.15rem; font-weight:600; margin-bottom:4px; }
         .tool-meta { display:flex; align-items:center; gap:8px; font-size:0.8rem; flex-wrap:wrap; }
@@ -400,6 +400,23 @@
                 return text => { div.textContent = text; return div.innerHTML; };
             })();
 
+            // 判断是否为绝对 URL（以 http:// 或 https:// 开头）
+            const isAbsoluteUrl = (url) => /^https?:\/\//i.test(url);
+
+            // 根据来源域名将相对路径转为完整 URL
+            const resolveIconUrl = (iconUrl, sourceDomain) => {
+                if (!iconUrl) return null;
+                if (isAbsoluteUrl(iconUrl)) return iconUrl;
+                // 相对路径，基于来源域名构建
+                try {
+                    const base = sourceDomain ? `https://${sourceDomain}` : window.location.origin;
+                    return new URL(iconUrl, base).href;
+                } catch (e) {
+                    log(`图标 URL 解析失败: ${iconUrl}`, 'warn');
+                    return null;
+                }
+            };
+
             const processUrl = (url, useHttps = true) => {
                 if (!url) return '';
                 if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -531,7 +548,6 @@
 
             window.addEventListener('load', () => dom.appContainer.classList.add('loaded'));
 
-            // 修复后的图标渲染逻辑：当没有 icon_url 时不输出 img，确保默认图标显示
             const createToolCard = (tool, index) => {
                 const rawName = tool.name || (tool._domain || '未命名工具');
                 const rawDeveloper = tool.developer || '贡献者';
@@ -547,7 +563,16 @@
                 const badgeText = isError ? '错误' : isFallback ? '实时' : `v${rawVersion}`;
                 const cardClass = `tool-card${isError ? ' error' : isFallback ? ' fallback' : ''}`;
 
-                const iconUrl = tool.icon_url ? processUrl(processWildcard(tool.icon_url)) : null;
+                // 关键修复：使用 _source 域名拼接相对路径图标
+                const sourceDomain = tool._source || (tool._domain || '');
+                const rawIconUrl = tool.icon_url || tool.icon || '';
+                const iconUrl = rawIconUrl ? resolveIconUrl(rawIconUrl, sourceDomain) : null;
+                if (iconUrl) {
+                    log(`工具 ${rawName} 图标: ${iconUrl}`, 'info');
+                } else if (rawIconUrl) {
+                    log(`工具 ${rawName} 图标解析失败，使用备用图标`, 'warn');
+                }
+
                 const projectUrl = tool.url ? processUrl(processWildcard(tool.url)) : null;
                 const parsedUrls = parseDownloadUrls(tool.download_url).filter(btn => {
                     const href = processUrl(processWildcard(btn.url));
@@ -571,23 +596,13 @@
                     ? `<div class="update-content"><strong>更新内容:</strong><br>${escapeHtml(updateContent)}</div>`
                     : '';
 
-                // 关键修复：如果有图标 URL 则创建 img + i 双元素，否则只创建 i
-                let iconHtml = '';
-                if (iconUrl) {
-                    iconHtml = `
-                        <img src="${escapeHtml(iconUrl)}" alt="" loading="lazy"
-                            onload="this.style.display='block';this.nextElementSibling.style.display='none';"
-                            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <i class="${iconClass}" style="display:flex;color:${iconColor};"></i>
-                    `;
-                } else {
-                    iconHtml = `<i class="${iconClass}" style="display:flex;color:${iconColor};"></i>`;
-                }
-
                 return `<div class="${cardClass}" style="animation-delay: ${index * 0.04}s">
                     <div class="tool-head">
                         <div class="tool-icon" style="background:${iconBg};">
-                            ${iconHtml}
+                            <img src="${escapeHtml(iconUrl || '')}" alt="" style="display:none" loading="lazy"
+                                onload="this.style.display='block';this.nextElementSibling.style.display='none';"
+                                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <i class="${iconClass}" style="display:flex;color:${iconColor};"></i>
                         </div>
                         <div class="tool-info">
                             <h3 style="color:${isError?'#dc3545':'var(--text)'};">${escapeHtml(rawName)}</h3>
@@ -609,11 +624,14 @@
                 if (!tools.length) {
                     dom.toolsGrid.innerHTML = '';
                     dom.emptyState.classList.add('active');
+                    dom.toolCountRow.innerHTML = '<span>工具数量: 0</span>';
                     return;
                 }
                 dom.emptyState.classList.remove('active');
                 dom.errorMsg.classList.remove('active');
                 dom.toolsGrid.innerHTML = tools.map((tool, i) => createToolCard(tool, i)).join('');
+                // 更新面板中的工具数量为实际加载数
+                dom.toolCountRow.innerHTML = `<span>工具数量: ${tools.length}</span>`;
             };
 
             const fetchWithProtocol = async (domain, filename, protocol) => {
@@ -625,6 +643,7 @@
                 }
                 const manifest = await res.json();
                 manifest._fallback_loaded = true;
+                manifest._source = domain; // 记录来源域名
                 return manifest;
             };
 
@@ -654,13 +673,16 @@
                         const res = await fetch(cacheUrl);
                         if (res.ok) {
                             const data = await res.json();
+                            data._source = domain; // 记录来源域名
                             log(`缓存命中: ${domain}`, 'success');
                             return data;
                         }
                     } catch (_) {}
                 }
                 log(`缓存未命中 ${domain}，回退实时请求`, 'warn');
-                return fetchDirect(domain);
+                const directData = await fetchDirect(domain);
+                if (directData) directData._source = domain;
+                return directData;
             };
 
             const loadConfig = async () => {
@@ -684,7 +706,7 @@
                 if (!meta) {
                     dom.cacheStatusRow.innerHTML = '<span><i class="fas fa-database"></i> <span class="cache-dot error"></span> 缓存不可用</span>';
                     dom.cacheDetailRow.innerHTML = '<span>最后同步: --</span>';
-                    dom.toolCountRow.innerHTML = '<span>工具数量: --</span>';
+                    // 工具数量保持实际加载后的值，不在这里覆盖
                     return;
                 }
                 const last = new Date(meta.last_sync);
@@ -695,7 +717,7 @@
                 else { cls = 'fresh'; text = '正常'; }
                 dom.cacheStatusRow.innerHTML = `<span><i class="fas fa-database"></i> ${text} <span class="cache-dot ${cls}"></span></span>`;
                 dom.cacheDetailRow.innerHTML = `<span>最后同步: ${last.toLocaleString()}</span>`;
-                dom.toolCountRow.innerHTML = `<span>工具数量: ${meta.total_tools || 0}</span>`;
+                // 注意：工具数量在 renderTools 中更新为实际值，此处不覆盖
             };
 
             const isValidTool = (tool) => {
@@ -769,6 +791,7 @@
 
             const isEUCountry = (code) => EU_COUNTRIES.includes(code.toUpperCase());
 
+            // 通过 IP 检测地理位置
             const detectEUviaIP = () => {
                 return new Promise((resolve) => {
                     const timeout = setTimeout(() => resolve(false), 3000);
@@ -780,6 +803,7 @@
                         })
                         .catch(() => {
                             clearTimeout(timeout);
+                            // 回退：语言检测（不精确但可用）
                             const lang = navigator.language || navigator.userLanguage || '';
                             const code = lang.split('-')[1] || lang.split('-')[0]?.toUpperCase();
                             resolve(code ? isEUCountry(code) : false);
@@ -818,21 +842,26 @@
                     return;
                 }
                 if (existingConsent === 'rejected') {
-                    return;
+                    return; // 不再询问
                 }
 
+                // 检测是否欧盟
                 const isEU = await detectEUviaIP();
                 if (!isEU) {
+                    // 非欧盟直接加载
                     loadClarityScript(clarityId);
                     return;
                 }
 
+                // 欧盟地区且无记录：显示横幅
                 showCookieBanner();
             })();
 
+            // 绑定按钮事件
             dom.cookieAccept.addEventListener('click', () => setCookieConsent(true));
             dom.cookieReject.addEventListener('click', () => setCookieConsent(false));
 
+            // 启动工具加载
             init();
         })();
     </script>
