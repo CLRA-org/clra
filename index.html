@@ -321,6 +321,7 @@
     </div>
 
     <script>
+        // ============= 侧边栏菜单逻辑 =============
         (function() {
             const hamburger = document.getElementById('hamburgerBtn');
             const sidebar = document.getElementById('sidebar');
@@ -354,6 +355,7 @@
             });
         })();
 
+        // ============= 主应用逻辑 =============
         (() => {
             const WILDCARD_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
             const LOG_COLORS = { error: '#ef4444', warn: '#f59e0b', success: '#10b981', info: '#3b82f6' };
@@ -570,7 +572,6 @@
                     log(`工具 ${rawName} 图标解析失败 (原始: ${rawIconUrl})`, 'warn');
                 }
 
-                // 图片标签（已移除 crossorigin 和 referrerpolicy）
                 const imgHtml = iconUrl
                     ? `<img src="${escapeHtml(iconUrl)}" alt="${escapeHtml(rawName)}" loading="lazy"
                         onload="this.nextElementSibling.style.display='none';"
@@ -767,27 +768,26 @@
 
             dom.refreshBtn.addEventListener('click', init);
 
-// ---------- Clarity 与 Cookie ----------
-const setupClarity = (id) => {
-    if (!id) return;
+            // ====================  Clarity 与 Cookie（核心修改） ====================
+            // 统一的第一方代理配置函数，在任何脚本加载前设置
+            const setupClarity = (id) => {
+                if (!id) return;
 
-    // ★ 关键：在加载任何 Clarity 脚本之前，先声明代理配置
-    window.clarityConfig = {
-        proxy: '/clarity-proxy'
-    };
+                // ★ 最重要的一步：声明第一方代理，必须在加载主脚本之前
+                window.clarityConfig = {
+                    proxy: '/clarity-proxy'
+                };
 
-    // 然后通过代理路径加载主脚本
-    const script = document.createElement('script');
-    script.async = 1;
-    script.src = '/clarity/tag/' + id;
-    document.head.appendChild(script);
+                // 动态创建脚本标签，通过反向代理路径加载主脚本
+                const script = document.createElement('script');
+                script.async = 1;
+                script.src = '/clarity/tag/' + id;
+                document.head.appendChild(script);
 
-    log(`Clarity 已通过第一方代理加载: ${id}`, 'info');
-};
+                log(`Clarity 已通过第一方代理加载: ${id}`, 'info');
+            };
 
-// 其余代码完全不变（getClarityId, EU检测, Cookie横幅等）
-// 只是把原来调用 loadClarityScript(id) 的地方，改成 setupClarity(id)
-
+            // 根据域名返回对应的 Clarity 项目 ID
             const getClarityId = () => {
                 const host = window.location.hostname;
                 if (host === 'clra1.lzh173.chat') return 'wvnsox7a0p';
@@ -833,10 +833,11 @@ const setupClarity = (id) => {
                 hideCookieBanner();
                 if (accepted) {
                     const clarityId = getClarityId();
-                    if (clarityId) loadClarityScript(clarityId);
+                    if (clarityId) setupClarity(clarityId);
                 }
             };
 
+            // 页面加载时判断是否加载 Clarity
             (async () => {
                 const clarityId = getClarityId();
                 if (!clarityId) {
@@ -846,14 +847,14 @@ const setupClarity = (id) => {
 
                 const existingConsent = localStorage.getItem('cookieConsent');
                 if (existingConsent === 'accepted') {
-                    loadClarityScript(clarityId);
+                    setupClarity(clarityId);
                     return;
                 }
                 if (existingConsent === 'rejected') return;
 
                 const isEU = await detectEUviaIP();
                 if (!isEU) {
-                    loadClarityScript(clarityId);
+                    setupClarity(clarityId);
                     return;
                 }
 
@@ -863,6 +864,7 @@ const setupClarity = (id) => {
             dom.cookieAccept.addEventListener('click', () => setCookieConsent(true));
             dom.cookieReject.addEventListener('click', () => setCookieConsent(false));
 
+            // 启动应用
             init();
         })();
     </script>
