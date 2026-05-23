@@ -38,8 +38,6 @@
         body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif; min-height:100vh; }
         .app-container { display:flex; min-height:100vh; opacity:0; transform:scale(0.96); transition:opacity 0.5s ease, transform 0.5s cubic-bezier(0.34,1.4,0.64,1); }
         .app-container.loaded { opacity:1; transform:scale(1); }
-        .sidebar-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.35); z-index:1040; pointer-events:none; }
-        .sidebar-overlay.active { display:block; }
         .hamburger-btn { display:none; position:fixed; top:16px; left:16px; z-index:1100; background:var(--bg2); border:1px solid var(--border); color:var(--text); width:44px; height:44px; border-radius:12px; align-items:center; justify-content:center; cursor:pointer; font-size:20px; box-shadow:var(--shadow); touch-action:manipulation; }
         .sidebar { width:240px; background:var(--bg-sidebar); padding:28px 20px; display:flex; flex-direction:column; flex-shrink:0; border-right:1px solid var(--border); transition:transform 0.3s ease; z-index:1050; }
         .sidebar-title { font-size:26px; font-weight:800; margin-bottom:36px; background:linear-gradient(135deg, var(--accent), #60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
@@ -120,7 +118,7 @@
 
         @media (max-width:768px) {
             .hamburger-btn { display:flex; }
-            .sidebar { position:fixed; top:0; left:0; height:100vh; z-index:1050; transform:translateX(-100%); box-shadow:4px 0 20px rgba(0,0,0,0.5); }
+            .sidebar { position:fixed; top:0; left:0; height:100vh; z-index:1050; transform:translateX(-100%); box-shadow:4px 0 20px rgba(0,0,0,0.5); overflow-y:auto; }
             .sidebar.open { transform:translateX(0); }
             .app-container { flex-direction:column; padding-top:70px; }
             .main-content { padding:16px; }
@@ -136,8 +134,7 @@
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css"></noscript>
 </head>
 <body>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
+    <!-- 汉堡菜单按钮（移动端可见） -->
     <button class="hamburger-btn" id="hamburgerBtn" aria-label="菜单">
         <i class="fas fa-bars"></i>
     </button>
@@ -257,22 +254,19 @@
     </div>
 
     <script>
-        // 移动端菜单（轻遮罩，可穿透）
+        // 移动端菜单（无遮罩层，点击外部自动关闭）
         (function() {
             const hamburger = document.getElementById('hamburgerBtn');
             const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
             let menuOpen = false;
 
             function openMenu() {
                 menuOpen = true;
                 sidebar.classList.add('open');
-                overlay.classList.add('active');
             }
             function closeMenu() {
                 menuOpen = false;
                 sidebar.classList.remove('open');
-                overlay.classList.remove('active');
             }
 
             hamburger.addEventListener('click', function(e) {
@@ -280,21 +274,19 @@
                 menuOpen ? closeMenu() : openMenu();
             });
 
-            // 点击遮罩（实际不会阻挡点击，但可以监听 document 来关闭）
             document.addEventListener('click', function(e) {
                 if (!menuOpen) return;
-                // 如果点击目标是汉堡按钮或侧边栏内部，不关闭
+                // 点击侧边栏内部或汉堡按钮不关闭
                 if (sidebar.contains(e.target) || hamburger.contains(e.target)) return;
                 closeMenu();
             });
 
-            // 防止侧边栏内部点击冒泡导致关闭
             sidebar.addEventListener('click', function(e) {
                 e.stopPropagation();
             });
         })();
 
-        // 主逻辑
+        // 主功能（保持不变）
         (() => {
             const WILDCARD_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
             const LOG_COLORS = { error: '#ef4444', warn: '#f59e0b', success: '#10b981', info: '#3b82f6' };
