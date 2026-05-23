@@ -1,913 +1,859 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLRA 工具分发平台</title>
-
-    <!-- 外部样式文件 -->
-    <link rel="stylesheet" href="styles.css">
-
-    <!-- Font Awesome for icons - 使用镜像源 -->
-    <link rel="stylesheet" href="https://fontawesome.ywxmz.com/7.2.0/css/all.min.css">
-
-    <!-- 网站设置样式 -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <style>
-        /* 菜单按钮 */
-        .settings-toggle {
+        :root {
+            --bg: #0a1525;
+            --bg2: #0f1f35;
+            --bg-sidebar: #09121e;
+            --border: rgba(255,255,255,0.08);
+            --text: #eef3ff;
+            --text2: #92a5cc;
+            --accent: #0078D4;
+            --accent-hover: #1084e8;
+            --btn-bg: rgba(255,255,255,0.05);
+            --btn-border: rgba(255,255,255,0.08);
+            --radius: 10px;
+            --radius-card: 16px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .light-theme {
+            --bg: #f2f6fc;
+            --bg2: #ffffff;
+            --bg-sidebar: #e9f0f8;
+            --border: rgba(0,0,0,0.06);
+            --text: #0b1a3b;
+            --text2: #3e5a8a;
+            --btn-bg: rgba(0,0,0,0.03);
+            --btn-border: rgba(0,0,0,0.06);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif; min-height:100vh; position:relative; }
+        .app-container { display:flex; min-height:100vh; opacity:0; transform:scale(0.96); transition:opacity 0.5s ease, transform 0.5s cubic-bezier(0.34,1.4,0.64,1); }
+        .app-container.loaded { opacity:1; transform:scale(1); }
+        .hamburger-btn { display:none; position:fixed; top:16px; left:16px; z-index:1100; background:var(--bg2); border:1px solid var(--border); color:var(--text); width:44px; height:44px; border-radius:12px; align-items:center; justify-content:center; cursor:pointer; font-size:20px; box-shadow:var(--shadow); touch-action:manipulation; }
+        .sidebar { width:240px; background:var(--bg-sidebar); padding:28px 20px; display:flex; flex-direction:column; flex-shrink:0; border-right:1px solid var(--border); transition:transform 0.3s ease; z-index:1050; }
+        .sidebar-title { font-size:26px; font-weight:800; margin-bottom:36px; background:linear-gradient(135deg, var(--accent), #60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .sidebar-btn { background:var(--btn-bg); border:1px solid var(--btn-border); color:var(--text); padding:12px 16px; border-radius:var(--radius); margin-bottom:8px; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:14px; transition:all var(--transition); font-weight:500; }
+        .sidebar-btn:hover { background:var(--accent); border-color:var(--accent); color:#fff; transform:translateX(4px); }
+        .sidebar-btn i { width:20px; text-align:center; }
+        .sidebar-spacer { flex:1; }
+        .sidebar-footer { font-size:12px; color:var(--text2); margin-top:20px; letter-spacing:0.5px; text-transform:uppercase; }
+        .main-content { flex:1; padding:28px; overflow-y:auto; }
+        .top-header { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-card); padding:28px 36px; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; box-shadow:var(--shadow); }
+        .top-header h1 { font-size:1.7rem; font-weight:700; }
+        .top-header h1 i { margin-right:10px; color:var(--accent); }
+        .top-header p { color:var(--text2); margin-top:4px; font-size:0.95rem; }
+        .client-dl-btn { background:var(--accent); color:#fff; padding:10px 22px; border-radius:40px; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:8px; transition:all var(--transition); font-size:0.9rem; box-shadow:0 4px 12px rgba(0,120,212,0.3); white-space:nowrap; }
+        .client-dl-btn:hover { background:var(--accent-hover); transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,120,212,0.4); }
+        .loading, .error-msg, .empty-state { text-align:center; padding:100px 20px; display:none; }
+        .loading.active, .error-msg.active, .empty-state.active { display:block; }
+        .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 20px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .error-msg i, .empty-state i { font-size:3.5rem; margin-bottom:20px; }
+        .empty-state i { color:var(--accent); opacity:0.6; }
+        .empty-btn { background:var(--accent); color:#fff; border:none; padding:12px 28px; border-radius:8px; cursor:pointer; font-size:14px; display:inline-flex; align-items:center; gap:8px; margin-top:24px; font-weight:600; transition:all var(--transition); }
+        .empty-btn:hover { background:var(--accent-hover); transform:translateY(-2px); }
+        .cors-info { background:var(--btn-bg); border-left:4px solid var(--accent); padding:20px; border-radius:0 var(--radius) var(--radius) 0; text-align:left; margin:24px auto; max-width:520px; color:var(--text2); }
+        .tools-grid { display:flex; flex-wrap:wrap; gap:20px; }
+        .tool-card { flex:1 1 300px; min-width:260px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-card); padding:24px; box-shadow:var(--shadow); opacity:0; transform:translateY(30px) scale(0.95); animation:cardIn 0.45s cubic-bezier(0.34,1.2,0.64,1) forwards; transition:transform 0.25s, box-shadow 0.25s; display:flex; flex-direction:column; }
+        .tool-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,0.5); }
+        @keyframes cardIn { to { opacity:1; transform:translateY(0) scale(1); } }
+        .tool-card.error { border-color:rgba(239,68,68,0.3); }
+        .tool-card.fallback { border-color:rgba(245,158,11,0.3); }
+        .tool-head { display:flex; gap:14px; margin-bottom:14px; }
+        .tool-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--btn-bg); overflow:hidden; }
+        .tool-icon img { width:36px; height:36px; object-fit:contain; display:block; }
+        .tool-icon i { font-size:24px; }
+        .tool-info h3 { font-size:1.15rem; font-weight:600; margin-bottom:4px; }
+        .tool-meta { display:flex; align-items:center; gap:8px; font-size:0.8rem; flex-wrap:wrap; }
+        .badge { color:#fff; padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:600; letter-spacing:0.3px; }
+        .developer { color:var(--text2); }
+        .fallback-tag { color:#f59e0b; font-weight:500; }
+        .tool-desc { color:var(--text2); margin-bottom:14px; line-height:1.6; font-size:0.9rem; word-break:break-word; }
+        .update-content { background:var(--btn-bg); border-left:3px solid var(--accent); border-radius:var(--radius); padding:10px 14px; margin-bottom:14px; font-size:0.88rem; color:var(--text2); }
+        .tool-actions { margin-top:auto; display:flex; flex-direction:column; gap:8px; }
+        .btn { display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 18px; border-radius:var(--radius); font-weight:600; text-decoration:none; font-size:0.85rem; transition:all var(--transition); border:none; cursor:pointer; font-family:inherit; }
+        .btn-primary { background:var(--accent); color:#fff; }
+        .btn-primary:hover { background:var(--accent-hover); transform:translateY(-1px); }
+        .btn-secondary { background:var(--btn-bg); border:1px solid var(--btn-border); color:var(--text); }
+        .btn-secondary:hover { background:var(--accent); border-color:var(--accent); color:#fff; transform:translateY(-1px); }
+        footer { text-align:center; padding:24px; color:var(--text2); font-size:0.85rem; border-top:1px solid var(--border); margin-top:40px; }
+        .settings-panel { position:fixed; top:88px; right:28px; width:380px; max-width:calc(100vw - 40px); background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow); z-index:1000; opacity:0; transform:translateY(-12px) scale(0.95); pointer-events:none; transition:all 0.2s ease; max-height:90vh; overflow-y:auto; }
+        .settings-panel.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+        .panel-head { display:flex; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border); font-weight:600; font-size:15px; }
+        .panel-close { background:none; border:none; color:var(--text2); cursor:pointer; font-size:16px; }
+        .setting-section { border-bottom:1px solid var(--border); }
+        .section-head { padding:14px 22px 6px; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text2); }
+        .setting-row { display:flex; flex-direction:column; padding:14px 22px; color:var(--text2); font-size:14px; gap:8px; border-bottom:1px solid var(--border); }
+        .setting-row:last-child { border-bottom:none; }
+        .setting-row label { display:flex; align-items:center; gap:8px; font-weight:500; }
+        .setting-row .setting-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .btn-sm { background:var(--btn-bg); border:1px solid var(--btn-border); color:var(--text); padding:6px 14px; border-radius:20px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; transition:all var(--transition); }
+        .btn-sm:hover { background:var(--accent); border-color:var(--accent); color:#fff; }
+        .color-input { -webkit-appearance:none; border:1px solid var(--btn-border); border-radius:6px; width:36px; height:36px; cursor:pointer; background:var(--accent); padding:2px; }
+        .color-input::-webkit-color-swatch-wrapper { padding:0; }
+        .color-input::-webkit-color-swatch { border:none; border-radius:4px; }
+        .cache-section, .debug-section { border-top:1px solid var(--border); }
+        .cache-head, .debug-head { padding:14px 22px 6px; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text2); }
+        .debug-log { max-height:200px; overflow-y:auto; padding:0 22px 18px; font-size:11px; }
+        .cache-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-left:8px; }
+        .cache-dot.fresh { background:#10b981; }
+        .cache-dot.stale { background:#f59e0b; }
+        .cache-dot.error { background:#ef4444; }
+        .cache-warning { color:#f59e0b; }
+        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:2000; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+        .modal-overlay.visible { opacity:1; pointer-events:auto; }
+        .modal-content { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-card); padding:32px 36px; max-width:460px; width:90%; color:var(--text); box-shadow:var(--shadow); }
+        .modal-content h2 { color:var(--accent); margin-bottom:18px; font-size:1.4rem; }
+        .modal-version, .modal-author, .modal-group, .modal-desc { margin-bottom:6px; font-size:14px; color:var(--text2); }
+        .modal-license { margin-top:20px; padding-top:16px; border-top:1px solid var(--border); font-size:13px; color:var(--text2); }
+        .modal-license a { color:var(--accent); text-decoration:underline; }
+        .modal-close-btn { background:var(--accent); color:#fff; border:none; padding:10px 28px; border-radius:8px; margin-top:24px; cursor:pointer; font-size:14px; font-weight:600; float:right; transition:background var(--transition); }
+        .modal-close-btn:hover { background:var(--accent-hover); }
+
+        /* Cookie 横幅样式 */
+        .cookie-banner {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            padding: 20px 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            z-index: 1001;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            color: var(--text-secondary);
-            font-size: 18px;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
+            gap: 20px;
+            flex-wrap: wrap;
+            z-index: 9999;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+            font-size: 14px;
+            color: var(--text);
+            transition: transform 0.3s ease;
         }
-
-        .settings-toggle:hover {
-            background: var(--accent-color);
-            color: #fff;
-            transform: scale(1.08);
-        }
-
-        .settings-toggle:active {
-            transform: scale(0.95);
-        }
-
-        .settings-toggle.active {
-            background: var(--accent-color);
-            color: #fff;
-        }
-
-        .settings-toggle:focus-visible {
-            box-shadow: 0 0 0 2px var(--accent-color);
-        }
-
-        /* 下拉面板 */
-        .settings-panel {
-            position: fixed;
-            top: 76px;
-            right: 20px;
-            width: 380px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            z-index: 1000;
-            box-shadow: var(--shadow);
-            opacity: 0;
-            transform: translateY(-10px) scale(0.95);
+        .cookie-banner.hidden {
+            transform: translateY(100%);
             pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
         }
-
-        .settings-panel.open {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
+        .cookie-banner p {
+            margin: 0;
+            flex: 1 1 auto;
+            max-width: 600px;
         }
-
-        .settings-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 20px;
-            border-radius: 14px 14px 0 0;
-            font-weight: 600;
-            font-size: 15px;
-            color: var(--text-primary);
-        }
-
-        .settings-header i {
-            margin-right: 8px;
-        }
-
-        .settings-close {
-            background: none;
+        .cookie-banner button {
+            background: var(--accent);
+            color: #fff;
             border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 5px 8px;
-            font-size: 15px;
-            border-radius: 6px;
-            transition: all 0.2s;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .settings-close:hover {
-            color: var(--text-primary);
-            background: var(--bg-secondary);
-        }
-
-        /* 控制行区域 */
-        .settings-controls {
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .settings-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            font-size: 14px;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .settings-row:last-child {
-            border-bottom: none;
-        }
-
-        .settings-row>span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .settings-row>span i {
-            width: 18px;
-            text-align: center;
-        }
-
-        /* 行内小按钮 */
-        .settings-btn {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-            white-space: nowrap;
-            font-family: inherit;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .settings-btn:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .settings-btn:active {
-            transform: scale(0.96);
-        }
-
-        /* 缓存指示点 */
-        .cache-indicator {
-            display: inline-block;
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .cache-fresh {
-            background: #28a745;
-        }
-
-        .cache-stale {
-            background: #ffc107;
-        }
-
-        .cache-error {
-            background: #dc3545;
-        }
-
-        .cache-time {
-            font-size: 13px;
-            opacity: 0.85;
-            white-space: nowrap;
-        }
-
-        /* 调试日志内的缓存状态子项 */
-        .debug-cache-row {
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .cache-warning-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
             padding: 8px 20px;
-            font-size: 12px;
-            color: #ff9500;
-            border-bottom: 1px solid var(--border-color);
-            background: rgba(255, 149, 0, 0.05);
-        }
-
-        /* 调试日志区域 */
-        .debug-section {
-            border-top: 1px solid var(--border-color);
-            border-radius: 0 0 14px 14px;
-            overflow: hidden;
-        }
-
-        .debug-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 20px;
-            font-size: 15px;
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-
-        .debug-header button {
-            background: none;
-            border: none;
-            color: var(--accent-color);
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 600;
             font-size: 14px;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-family: inherit;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
+            transition: background var(--transition);
+        }
+        .cookie-banner button:hover {
+            background: var(--accent-hover);
+        }
+        .cookie-banner .cookie-reject {
+            background: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            color: var(--text);
+        }
+        .cookie-banner .cookie-reject:hover {
+            background: var(--btn-border);
         }
 
-        .debug-header button:hover {
-            background: var(--bg-secondary);
-        }
-
-        .debug-content {
-            padding: 0 20px 14px;
-            max-height: 360px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            font-size: 12px;
-            line-height: 1.7;
-            word-break: break-all;
-        }
-
-        .debug-content:empty {
-            padding: 0;
-        }
-
-        .debug-content div {
-            font-size: 12px;
-        }
-
-        .debug-content div span:first-child {
-            font-size: 11px;
-        }
-
-        /* 小屏适配 */
-        @media (max-width: 480px) {
-            .settings-panel {
-                right: 8px;
-                left: 8px;
-                width: auto;
-            }
-        }
-
-        /* 滚动条美化 */
-        .debug-content::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .debug-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .debug-content::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
+        @media (max-width:768px) {
+            .hamburger-btn { display:flex; }
+            .sidebar { position:absolute; top:0; left:0; height:100vh; width:240px; z-index:1050; transform:translateX(-100%); box-shadow:4px 0 20px rgba(0,0,0,0.5); overflow-y:auto; }
+            .sidebar.open { transform:translateX(0); }
+            .app-container { flex-direction:column; padding-top:70px; }
+            .main-content { padding:16px; }
+            .top-header { flex-direction:column; align-items:flex-start; padding:20px 24px; }
+            .tool-card { flex:1 1 100%; min-width:0; }
+            .tools-grid { gap:14px; }
+            .settings-panel { top:70px; right:12px; width:calc(100vw - 24px); }
+            .client-dl-btn { width:100%; justify-content:center; }
+            .top-header h1 { font-size:1.4rem; }
         }
     </style>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" media="print" onload="this.media='all';this.onload=null;">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css"></noscript>
 </head>
-
 <body>
-    <!-- 菜单按钮 -->
-    <div class="settings-toggle" id="settingsToggle" role="button" tabindex="0" aria-label="打开菜单">
-        <i class="fas fa-ellipsis"></i>
-    </div>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="菜单">
+        <i class="fas fa-bars"></i>
+    </button>
 
-    <!-- 网站设置 -->
-    <div class="settings-panel" id="settingsPanel" role="dialog" aria-label="网站设置">
-        <div class="settings-header">
-            <span><i class="fas fa-sliders"></i>网站设置</span>
-            <button class="settings-close" id="settingsClose" aria-label="关闭"><i class="fas fa-times"></i></button>
-        </div>
+    <div class="app-container" id="appContainer">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-title">CLRA</div>
+            <button class="sidebar-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
+            <button class="sidebar-btn" id="settingsBtn"><i class="fas fa-cog"></i> 设置</button>
+            <button class="sidebar-btn" id="aboutBtn"><i class="fas fa-info-circle"></i> 关于</button>
+            <div class="sidebar-spacer"></div>
+            <div class="sidebar-footer">工具列表</div>
+        </aside>
 
-        <div class="settings-controls">
-            <div class="settings-row">
-                <span><i class="fas fa-palette"></i> 外观主题</span>
-                <button class="settings-btn" id="themeToggle">
-                    <i class="fas fa-moon" id="themeIcon"></i>
-                    <span id="themeLabel">浅色</span>
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-text">
+                    <h1><i class="fas fa-tools"></i> CLRA 工具分发平台</h1>
+                    <p>抓牢学生机房学习主权，发现并下载优质工具</p>
+                </div>
+                <a class="client-dl-btn" href="./client" aria-label="下载桌面客户端">
+                    <i class="fas fa-download"></i> 下载客户端
+                </a>
+            </header>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>正在加载工具列表…</p>
+            </div>
+
+            <div class="error-msg" id="errorMsg">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>加载失败</h3>
+                <p>无法加载工具列表，请检查网络或联系管理员</p>
+                <div class="cors-info">
+                    <h4><i class="fas fa-info-circle"></i> 常见原因</h4>
+                    <ul>
+                        <li><strong>跨域请求被阻止</strong> – 服务器需配置 CORS</li>
+                        <li><strong>网络连接失败</strong> – 检查域名可达性</li>
+                        <li><strong>清单文件缺失</strong> – 确认存在 clra_manifest.json 或 jfkl_manifest.json</li>
+                        <li><strong>泛域名解析失败</strong> – 检查域名格式</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-box-open"></i>
+                <h3>没有找到工具</h3>
+                <p>当前没有可用的工具，请稍后刷新或联系管理员添加新的工具源。</p>
+                <button class="empty-btn" onclick="document.getElementById('refreshBtn').click()">
+                    <i class="fas fa-sync-alt"></i> 刷新
                 </button>
             </div>
+
+            <div class="tools-grid" id="toolsGrid"></div>
+
+            <footer>
+                <p>&copy; 2026 CLRA 工具分发平台</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="panel-head">
+            <span><i class="fas fa-sliders"></i> 设置</span>
+            <button class="panel-close" id="panelClose"><i class="fas fa-times"></i></button>
         </div>
 
-        <!-- 调试日志 -->
+        <div class="setting-section">
+            <div class="section-head">外观</div>
+            <div class="setting-row">
+                <label><i class="fas fa-palette"></i> 主题</label>
+                <div class="setting-control">
+                    <button class="btn-sm" id="themeBtn">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                        <span id="themeLabel">浅色</span>
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <label><i class="fas fa-eyedropper"></i> 强调色</label>
+                <div class="setting-control">
+                    <input type="color" id="accentColorPicker" class="color-input" value="#0078D4">
+                    <span style="font-size:13px;">点击选择颜色</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cache-section">
+            <div class="cache-head">缓存状态</div>
+            <div class="setting-row" id="cacheStatusRow">
+                <span><i class="fas fa-database"></i> 加载中…</span>
+            </div>
+            <div class="setting-row" id="cacheDetailRow">
+                <span>最后同步: --</span>
+            </div>
+            <div class="setting-row" id="toolCountRow">
+                <span>工具数量: --</span>
+            </div>
+        </div>
+
         <div class="debug-section">
-            <div class="debug-header">
-                <span><i class="fas fa-bug" style="margin-right:8px;font-size:15px;"></i>调试日志</span>
-            </div>
-
-            <div class="settings-row debug-cache-row" id="cacheStatusRow">
-                <span><i class="fas fa-database"></i> 加载中...</span>
-            </div>
-
-            <div class="debug-content" id="debugContent"></div>
+            <div class="debug-head">调试日志</div>
+            <div class="debug-log" id="debugLog"></div>
         </div>
     </div>
 
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-tools"></i> CLRA 工具分发平台</h1>
-            <p>抓牢学生机房学习主权，发现并下载优质工具</p>
-        </header>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>正在加载工具列表...</p>
-        </div>
-
-        <div class="error-message" id="errorMessage">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3>加载失败</h3>
-            <p>无法加载工具列表，请检查网络连接或联系管理员</p>
-
-            <div class="cors-info">
-                <h4><i class="fas fa-info-circle"></i> 常见加载问题</h4>
-                <ul>
-                    <li><strong>跨域请求被阻止</strong> - 服务器需要配置 CORS 策略</li>
-                    <li><strong>网络连接失败</strong> - 检查网络连接和域名是否可达</li>
-                    <li><strong>工具清单不存在</strong> - 确认域名下有 clra_manifest.json 或 jfkl_manifest.json 文件</li>
-                    <li><strong>泛域名解析失败</strong> - 检查域名格式是否正确</li>
-                </ul>
-                <p style="margin-top: 10px;">点击右上角的 <i class="fas fa-ellipsis"></i> 按钮查看调试信息</p>
+    <!-- 关于弹窗 -->
+    <div class="modal-overlay" id="aboutModal">
+        <div class="modal-content">
+            <h2>CLRA 工具分发平台（网页版）</h2>
+            <p class="modal-version">版本: 1.0.0</p>
+            <p class="modal-author">作者: 星影 (XingYing) & CLRA Team</p>
+            <p class="modal-group">技术讨论群: 1071829146</p>
+            <p class="modal-group">加入审核群: 1073170610</p>
+            <p class="modal-desc">计算机实验室反抗联盟工具箱 - 基于 Web 的工具分发平台</p>
+            <div class="modal-license">
+                <p>本项目为开源项目，源代码托管在 <a href="https://github.com/CLRA-org/dra" target="_blank" rel="noopener noreferrer">GitHub</a>，采用 Apache License 2.0 许可。</p>
             </div>
+            <button class="modal-close-btn" id="closeAboutBtn">关闭</button>
         </div>
+    </div>
 
-        <div class="tools-grid" id="toolsGrid"></div>
-
-        <footer>
-            <p>&copy; 2026 CLRA 工具分发平台</p>
-        </footer>
+    <!-- Cookie 同意横幅 -->
+    <div id="cookieBanner" class="cookie-banner hidden">
+        <p>本网站使用 Cookie 及 Microsoft Clarity 进行匿名分析，以改善用户体验。继续使用即表示您同意我们使用这些技术。</p>
+        <button id="cookieAccept">接受</button>
+        <button id="cookieReject" class="cookie-reject">拒绝</button>
     </div>
 
     <script>
-        (() => {
-            'use strict';
+        (function() {
+            const hamburger = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            let menuOpen = false;
 
-            // ==================== 常量 ====================
+            function openMenu() {
+                menuOpen = true;
+                sidebar.style.top = window.scrollY + 'px';
+                sidebar.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeMenu() {
+                menuOpen = false;
+                sidebar.classList.remove('open');
+                document.body.style.overflow = '';
+            }
 
-            const MANIFEST_TYPES = ['clra_manifest', 'jfkl_manifest'];
-            const MANIFEST_FILES = ['clra_manifest.json', 'jfkl_manifest.json'];
-            const LOG_TYPE_COLORS = Object.freeze({
-                error: '#ef4444',
-                warn: '#f59e0b',
-                success: '#10b981',
-                info: '#3b82f6',
+            hamburger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menuOpen ? closeMenu() : openMenu();
             });
+
+            document.addEventListener('click', function(e) {
+                if (!menuOpen) return;
+                if (sidebar.contains(e.target) || hamburger.contains(e.target)) return;
+                closeMenu();
+            });
+
+            sidebar.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        })();
+
+        (() => {
             const WILDCARD_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            const MAX_DEBUG_ENTRIES = 50;
+            const LOG_COLORS = { error: '#ef4444', warn: '#f59e0b', success: '#10b981', info: '#3b82f6' };
+            const MAX_LOG = 60;
 
-            // ==================== DOM 元素缓存 ====================
+            const cacheDom = () => ({
+                appContainer: document.getElementById('appContainer'),
+                refreshBtn: document.getElementById('refreshBtn'),
+                settingsBtn: document.getElementById('settingsBtn'),
+                aboutBtn: document.getElementById('aboutBtn'),
+                aboutModal: document.getElementById('aboutModal'),
+                closeAboutBtn: document.getElementById('closeAboutBtn'),
+                settingsPanel: document.getElementById('settingsPanel'),
+                panelClose: document.getElementById('panelClose'),
+                themeBtn: document.getElementById('themeBtn'),
+                themeIcon: document.getElementById('themeIcon'),
+                themeLabel: document.getElementById('themeLabel'),
+                accentColorPicker: document.getElementById('accentColorPicker'),
+                cacheStatusRow: document.getElementById('cacheStatusRow'),
+                cacheDetailRow: document.getElementById('cacheDetailRow'),
+                toolCountRow: document.getElementById('toolCountRow'),
+                debugLog: document.getElementById('debugLog'),
+                toolsGrid: document.getElementById('toolsGrid'),
+                emptyState: document.getElementById('emptyState'),
+                loading: document.getElementById('loading'),
+                errorMsg: document.getElementById('errorMsg'),
+                cookieBanner: document.getElementById('cookieBanner'),
+                cookieAccept: document.getElementById('cookieAccept'),
+                cookieReject: document.getElementById('cookieReject'),
+            });
 
-            const $ = id => document.getElementById(id);
+            const dom = cacheDom();
+            let isPanelOpen = false;
+            let debugEntries = [];
+            let rafPending = false;
 
-            /** @type {Record<string, HTMLElement>} */
-            const dom = {};
-
-            /** 一次性缓存所有需要频繁访问的 DOM 元素 */
-            const cacheDom = () => {
-                const ids = [
-                    'settingsToggle', 'settingsPanel', 'settingsClose',
-                    'themeToggle', 'themeIcon', 'themeLabel',
-                    'clearDebug', 'debugContent', 'cacheStatusRow',
-                    'toolsGrid', 'loading', 'errorMessage',
-                ];
-                for (const id of ids) dom[id] = $(id);
-            };
-
-            // ==================== 应用状态 ====================
-
-            const state = {
-                wildcardCache: new Map(),
-                tools: [],
-                theme: localStorage.getItem('theme') || 'light',
-                debugLogs: [],
-                panelOpen: false,
-                debugRafPending: false,
-            };
-
-            // ==================== 通用工具函数 ====================
-
-            /** 复用单个 DOM 元素做 textContent → innerHtml 转义，避免反复 createElement */
             const escapeHtml = (() => {
-                const el = document.createElement('div');
-                return text => { el.textContent = text; return el.innerHTML; };
+                const div = document.createElement('div');
+                return text => { div.textContent = text; return div.innerHTML; };
             })();
 
-            /** 为 URL 补全协议前缀 */
+            const isAbsoluteUrl = (url) => /^https?:\/\//i.test(url);
+
+            const resolveIconUrl = (iconUrl, sourceDomain) => {
+                if (!iconUrl) return null;
+                const resolved = processWildcard(iconUrl);
+                if (isAbsoluteUrl(resolved)) return resolved;
+                if (resolved.startsWith('//')) return 'https:' + resolved;
+                if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/|$)/.test(resolved) && !resolved.startsWith('/') && !resolved.startsWith('.')) {
+                    try {
+                        new URL('https://' + resolved);
+                        return 'https://' + resolved;
+                    } catch (e) {}
+                }
+                try {
+                    const base = sourceDomain ? `https://${sourceDomain}` : window.location.origin;
+                    return new URL(resolved, base).href;
+                } catch (e) {
+                    return null;
+                }
+            };
+
             const processUrl = (url, useHttps = true) => {
                 if (!url) return '';
                 if (url.startsWith('http://') || url.startsWith('https://')) return url;
                 return useHttps ? `https://${url}` : `http://${url}`;
             };
 
-            /** 确定性伪随机字符串生成器，用于泛域名星号替换 */
-            const generateFixedWildcardString = domain => {
-                let hash = 0;
-                for (let i = 0; i < domain.length; i++) {
-                    hash = ((hash << 5) - hash) + domain.charCodeAt(i);
-                    hash = hash & hash;
-                }
+            const wildcardCache = new Map();
+            const fixedHash = (s) => {
+                let h = 0;
+                for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+                return Math.abs(h);
+            };
+            const processWildcard = (str) => {
+                if (!str.includes('*')) return str;
+                let seed = fixedHash(str);
                 let result = '';
-                let seed = Math.abs(hash);
-                for (let j = 0; j < 16; j++) {
-                    seed = (seed * 9301 + 49297) % 233280;
-                    result += WILDCARD_CHARS[seed % WILDCARD_CHARS.length];
+                for (const ch of str) {
+                    if (ch === '*') {
+                        seed = (seed * 9301 + 49297) % 233280;
+                        result += WILDCARD_CHARS[seed % WILDCARD_CHARS.length];
+                    } else {
+                        result += ch;
+                    }
                 }
                 return result;
             };
 
-            /** 泛域名解析（带 Map 缓存） */
-            const processWildcardDomain = domain => {
-                if (!domain.includes('*')) return domain;
-                const cached = state.wildcardCache.get(domain);
-                if (cached !== undefined) {
-                    debug.log(`从缓存获取泛域名解析: ${domain} -> ${cached}`);
-                    return cached;
-                }
-                const processed = domain.replace(/\*/g, generateFixedWildcardString(domain));
-                state.wildcardCache.set(domain, processed);
-                debug.log(`泛域名解析: ${domain} -> ${processed}`);
-                return processed;
-            };
-
-            /** 解析 download_url 字段，统一输出为 { text, url } 数组 */
-            const parseDownloadUrls = downloadUrl => {
-                if (!downloadUrl) return [];
-
-                const parseSingle = str => {
-                    const idx = str.indexOf(':');
-                    if (idx !== -1) return { text: str.substring(0, idx).trim(), url: str.substring(idx + 1).trim() };
-                    return { text: '下载', url: str };
+            const parseDownloadUrls = (dl) => {
+                if (!dl) return [];
+                const parse = (str) => {
+                    const i = str.indexOf(':');
+                    return i > -1 ? { text: str.slice(0, i).trim(), url: str.slice(i + 1).trim() } : { text: '下载', url: str };
                 };
-
-                if (typeof downloadUrl === 'string') return [parseSingle(downloadUrl)];
-                if (Array.isArray(downloadUrl)) {
-                    return downloadUrl.map(item => {
-                        if (typeof item === 'string') return parseSingle(item);
-                        return { text: item.text || '下载', url: item.url || '' };
-                    });
-                }
-                return [];
+                return (Array.isArray(dl) ? dl : [dl]).map(item =>
+                    typeof item === 'string' ? parse(item) : { text: item.text || '下载', url: item.url || '' }
+                );
             };
 
-            // ==================== 调试模块 ====================
-
-            const debug = {
-                /** 写入一条日志并同步到 console */
-                log(message, type = 'info') {
-                    const timestamp = new Date().toISOString();
-                    state.debugLogs.push({ timestamp, message, type });
-
-                    const fn = type === 'error' ? console.error
-                        : type === 'warn' ? console.warn
-                            : console.log;
-                    fn(`[CLRA] ${timestamp}: ${message}`);
-
-                    // 面板打开时，用 rAF 合并刷新，避免密集 DOM 操作
-                    if (state.panelOpen) this.scheduleRefresh();
-                },
-
-                scheduleRefresh() {
-                    if (state.debugRafPending) return;
-                    state.debugRafPending = true;
-                    requestAnimationFrame(() => {
-                        this.refreshPanel();
-                        state.debugRafPending = false;
-                    });
-                },
-
-                /** 将最近日志渲染到调试面板 */
-                refreshPanel() {
-                    const recent = state.debugLogs.slice(-MAX_DEBUG_ENTRIES);
-                    const html = recent.map(({ timestamp, message, type }) => {
-                        const color = LOG_TYPE_COLORS[type] || LOG_TYPE_COLORS.info;
-                        return `<div style="margin-bottom:5px;padding:5px 8px;border-left:3px solid ${color};background:rgba(128,128,128,0.06);border-radius:0 4px 4px 0;">`
-                            + `<span style="color:#888;">${timestamp}</span>`
-                            + `<span style="margin-left:8px;">${escapeHtml(message)}</span></div>`;
-                    }).join('');
-
-                    const el = dom.debugContent;
-                    if (el) {
-                        el.innerHTML = html;
-                        el.scrollTop = el.scrollHeight;
-                    }
-                }
+            const log = (msg, type = 'info') => {
+                const ts = new Date().toISOString();
+                debugEntries.push({ ts, msg, type });
+                if (debugEntries.length > MAX_LOG) debugEntries.shift();
+                (type === 'error' ? console.error : type === 'warn' ? console.warn : console.log)(`[CLRA] ${ts}: ${msg}`);
+                if (isPanelOpen) scheduleLogRefresh();
             };
 
-            // ==================== 设置面板模块 ====================
-
-            const settingsPanel = {
-                open() {
-                    state.panelOpen = true;
-                    dom.settingsPanel.classList.add('open');
-                    dom.settingsToggle.classList.add('active');
-                    debug.refreshPanel();
-                },
-                close() {
-                    state.panelOpen = false;
-                    dom.settingsPanel.classList.remove('open');
-                    dom.settingsToggle.classList.remove('active');
-                },
-                toggle() {
-                    state.panelOpen ? this.close() : this.open();
-                },
+            const scheduleLogRefresh = () => {
+                if (rafPending) return;
+                rafPending = true;
+                requestAnimationFrame(() => { renderDebugLog(); rafPending = false; });
             };
 
-            // ==================== 主题模块 ====================
+            const renderDebugLog = () => {
+                const html = debugEntries.map(({ ts, msg, type }) => {
+                    const color = LOG_COLORS[type] || LOG_COLORS.info;
+                    return `<div style="margin-bottom:4px;padding:4px 8px;border-left:3px solid ${color};background:rgba(128,128,128,0.06);border-radius:0 4px 4px 0;">
+                        <span style="color:#888;font-size:11px;">${ts}</span><span style="margin-left:8px;">${escapeHtml(msg)}</span></div>`;
+                }).join('');
+                dom.debugLog.innerHTML = html;
+                dom.debugLog.scrollTop = dom.debugLog.scrollHeight;
+            };
 
-            const themeManager = {
-                /** 根据当前 state.theme 同步 DOM 状态 */
+            const togglePanel = (show) => {
+                isPanelOpen = show ?? !isPanelOpen;
+                dom.settingsPanel.classList.toggle('open', isPanelOpen);
+                if (isPanelOpen) renderDebugLog();
+            };
+
+            dom.settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePanel(); });
+            dom.panelClose.addEventListener('click', () => togglePanel(false));
+            document.addEventListener('click', (e) => {
+                if (!dom.settingsPanel.contains(e.target) && !dom.settingsBtn.contains(e.target)) togglePanel(false);
+            });
+            dom.settingsPanel.addEventListener('click', (e) => e.stopPropagation());
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isPanelOpen) togglePanel(false); });
+
+            dom.aboutBtn.addEventListener('click', () => dom.aboutModal.classList.add('visible'));
+            dom.closeAboutBtn.addEventListener('click', () => dom.aboutModal.classList.remove('visible'));
+            dom.aboutModal.addEventListener('click', (e) => {
+                if (e.target === dom.aboutModal) dom.aboutModal.classList.remove('visible');
+            });
+
+            const applyAccentColor = (color) => {
+                document.documentElement.style.setProperty('--accent', color);
+                document.documentElement.style.setProperty('--accent-hover', adjustColor(color, 10));
+                dom.accentColorPicker.value = color;
+            };
+            const adjustColor = (hex, percent) => {
+                const num = parseInt(hex.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+                const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+                const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+                return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+            };
+            const savedAccent = localStorage.getItem('clra-accent');
+            if (savedAccent) applyAccentColor(savedAccent);
+            else dom.accentColorPicker.value = '#0078D4';
+            dom.accentColorPicker.addEventListener('input', (e) => {
+                const color = e.target.value;
+                applyAccentColor(color);
+                localStorage.setItem('clra-accent', color);
+            });
+
+            const theme = {
+                current: localStorage.getItem('clra-theme') || 'auto',
+                systemDark: window.matchMedia('(prefers-color-scheme: dark)').matches,
                 apply() {
-                    const isDark = state.theme === 'dark';
-                    document.body.classList.toggle('dark-theme', isDark);
-                    if (dom.themeIcon) dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-                    if (dom.themeLabel) dom.themeLabel.textContent = isDark ? '深色' : '浅色';
+                    const isDark = this.current === 'dark' || (this.current === 'auto' && this.systemDark);
+                    document.body.classList.toggle('light-theme', !isDark);
+                    dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    dom.themeLabel.textContent = this.current === 'auto' ? '自动' : (isDark ? '深色' : '浅色');
                 },
-                /** 切换主题并持久化 */
+                setMode(mode) { this.current = mode; localStorage.setItem('clra-theme', mode); this.apply(); },
                 toggle() {
-                    state.theme = state.theme === 'light' ? 'dark' : 'light';
-                    localStorage.setItem('theme', state.theme);
-                    this.apply();
+                    if (this.current === 'auto') this.setMode(this.systemDark ? 'light' : 'dark');
+                    else if (this.current === 'light') this.setMode('dark');
+                    else this.setMode('auto');
                 },
             };
+            dom.themeBtn.addEventListener('click', () => theme.toggle());
+            const darkMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const systemThemeListener = (e) => { theme.systemDark = e.matches; if (theme.current === 'auto') theme.apply(); };
+            if (darkMediaQuery.addEventListener) darkMediaQuery.addEventListener('change', systemThemeListener);
+            else if (darkMediaQuery.addListener) darkMediaQuery.addListener(systemThemeListener);
+            theme.apply();
 
-            // ==================== 工具卡片渲染 ====================
+            window.addEventListener('load', () => dom.appContainer.classList.add('loaded'));
 
-            /** 根据工具数据生成单张卡片 HTML */
-            const createToolCard = tool => {
-                const {
-                    name, developer, description, version,
-                    update_content, url, download_url, icon_url,
-                    isError, _fallback_loaded,
-                } = tool;
-                const isFallback = _fallback_loaded === true;
-
-                // 预计算视觉参数
-                const iconBg = isError ? 'rgba(220,53,69,0.1)' : 'var(--bg-secondary)';
+            const createToolCard = (tool, index) => {
+                const rawName = tool.name || (tool._domain || '未命名工具');
+                const rawDeveloper = tool.developer || '贡献者';
+                const rawVersion = tool.version || '?';
+                const rawDesc = tool.description || '暂无描述';
+                const updateContent = tool.update_content || '';
+                const isError = tool.isError;
+                const isFallback = tool._fallback_loaded;
+                const iconBg = isError ? 'rgba(220,53,69,0.1)' : 'var(--bg2)';
                 const iconClass = isError ? 'fas fa-exclamation-triangle' : isFallback ? 'fas fa-wifi' : 'fas fa-cogs';
-                const iconColor = isError ? '#dc3545' : isFallback ? '#ff9500' : 'var(--accent-color)';
-                const nameColor = isError ? '#dc3545' : 'var(--text-primary)';
-                const descColor = isError ? '#dc3545' : 'var(--text-secondary)';
-                const badgeBg = isError ? '#dc3545' : isFallback ? '#ff9500' : 'var(--accent-color)';
-                const badgeText = isError ? '错误' : isFallback ? '实时' : `v${escapeHtml(version)}`;
-                const cardClass = isError ? 'tool-card error-card' : isFallback ? 'tool-card fallback-card' : 'tool-card';
+                const iconColor = isError ? '#dc3545' : isFallback ? '#ff9500' : 'var(--accent)';
+                const badgeBg = isError ? '#dc3545' : isFallback ? '#ff9500' : 'var(--accent)';
+                const badgeText = isError ? '错误' : isFallback ? '实时' : `v${rawVersion}`;
+                const cardClass = `tool-card${isError ? ' error' : isFallback ? ' fallback' : ''}`;
 
-                const escapedName = escapeHtml(name);
-                const escapedDesc = escapeHtml(description).replace(/\\n/g, '<br>');
-                const escapedUpdate = update_content ? escapeHtml(update_content) : '';
-                const iconUrl = icon_url ? processUrl(processWildcardDomain(icon_url)) : null;
-                const projectUrl = url ? processUrl(processWildcardDomain(url)) : null;
+                const sourceDomain = tool._source || '';
+                const rawIconUrl = (tool.icon_url || tool.icon || '').trim();
+                const iconUrl = rawIconUrl ? resolveIconUrl(rawIconUrl, sourceDomain) : null;
 
-                // 图标区域
-                const iconHtml = iconUrl
-                    ? `<img src="${iconUrl}" alt="${escapedName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`
-                    + `<i class="${iconClass}" style="display:none;color:${iconColor};"></i>`
-                    : `<i class="${iconClass}" style="display:flex;color:${iconColor};"></i>`;
+                if (iconUrl) {
+                    log(`工具 ${rawName} 图标: ${iconUrl}`, 'info');
+                } else if (rawIconUrl) {
+                    log(`工具 ${rawName} 图标解析失败 (原始: ${rawIconUrl})`, 'warn');
+                }
 
-                // 下载按钮
-                const dlHtml = parseDownloadUrls(download_url).map(btn => {
-                    const href = escapeHtml(processUrl(processWildcardDomain(btn.url)));
-                    return `<a href="${href}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">`
-                        + `<i class="fas fa-download"></i> ${escapeHtml(btn.text)}</a>`;
+                // 图片标签（已移除 crossorigin 和 referrerpolicy）
+                const imgHtml = iconUrl
+                    ? `<img src="${escapeHtml(iconUrl)}" alt="${escapeHtml(rawName)}" loading="lazy"
+                        onload="this.nextElementSibling.style.display='none';"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`
+                    : '';
+                const fallbackIconHtml = `<i class="${iconClass}" style="display:${iconUrl ? 'none' : 'flex'};color:${iconColor};"></i>`;
+
+                const projectUrl = tool.url ? processUrl(processWildcard(tool.url)) : null;
+                const parsedUrls = parseDownloadUrls(tool.download_url).filter(btn => {
+                    const href = processUrl(processWildcard(btn.url));
+                    return href.startsWith('http://') || href.startsWith('https://');
+                });
+
+                const downloadHtml = parsedUrls.map(btn => {
+                    const href = escapeHtml(processUrl(processWildcard(btn.url)));
+                    return `<a href="${href}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-download"></i> ${escapeHtml(btn.text)}</a>`;
                 }).join('');
 
-                // 项目主页按钮
                 const projectBtn = !isError && projectUrl
-                    ? `<a href="${escapeHtml(projectUrl)}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">`
-                    + `<i class="fas fa-external-link-alt"></i> 项目主页</a>`
+                    ? `<a href="${escapeHtml(projectUrl)}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-external-link-alt"></i> 项目主页</a>`
                     : '';
 
-                // 更新内容
-                const updateHtml = escapedUpdate
-                    ? `<div class="update-content"><strong>更新内容:</strong><br>${escapedUpdate}</div>`
+                const fallbackTag = isFallback ? '<span class="fallback-tag">(回退加载)</span>' : '';
+
+                const updateHtml = updateContent.trim()
+                    ? `<div class="update-content"><strong>更新内容:</strong><br>${escapeHtml(updateContent)}</div>`
                     : '';
 
-                // 回退标记
-                const fallbackTag = isFallback
-                    ? '<span class="developer" style="color:#ff9500;">(回退加载)</span>'
-                    : '';
-
-                return `<div class="${cardClass}">`
-                    + `<div class="tool-header">`
-                    + `<div class="tool-icon" style="background:${iconBg};">${iconHtml}</div>`
-                    + `<div class="tool-info">`
-                    + `<h3 style="color:${nameColor};">${escapedName}</h3>`
-                    + `<div class="tool-meta">`
-                    + `<span class="version-badge" style="background:${badgeBg};">${badgeText}</span>`
-                    + `<span class="developer">by ${escapeHtml(developer)}</span>${fallbackTag}`
-                    + `</div>`
-                    + `</div>`
-                    + `</div>`
-                    + `<div class="tool-description" style="color:${descColor};">${escapedDesc}</div>`
-                    + updateHtml
-                    + `<div class="tool-actions">${projectBtn}${dlHtml}</div>`
-                    + `</div>`;
+                return `<div class="${cardClass}" style="animation-delay: ${index * 0.04}s">
+                    <div class="tool-head">
+                        <div class="tool-icon" style="background:${iconBg};">
+                            ${imgHtml}
+                            ${fallbackIconHtml}
+                        </div>
+                        <div class="tool-info">
+                            <h3 style="color:${isError?'#dc3545':'var(--text)'};">${escapeHtml(rawName)}</h3>
+                            <div class="tool-meta">
+                                <span class="badge" style="background:${badgeBg};">${badgeText}</span>
+                                <span class="developer">by ${escapeHtml(rawDeveloper)}</span>
+                                ${fallbackTag}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tool-desc">${escapeHtml(rawDesc).replace(/\\n/g, '<br>')}</div>
+                    ${updateHtml}
+                    <div class="tool-actions">${projectBtn}${downloadHtml}</div>
+                </div>`;
             };
 
-            /** 渲染所有工具卡片 */
-            const renderTools = () => {
-                if (state.tools.length === 0) {
-                    dom.loading.classList.remove('active');
-                    dom.errorMessage.classList.add('active');
+            const renderTools = (tools) => {
+                dom.loading.classList.remove('active');
+                if (!tools.length) {
+                    dom.toolsGrid.innerHTML = '';
+                    dom.emptyState.classList.add('active');
+                    dom.toolCountRow.innerHTML = '<span>工具数量: 0</span>';
                     return;
                 }
-                dom.toolsGrid.innerHTML = state.tools.map(createToolCard).join('');
-                dom.loading.classList.remove('active');
+                dom.emptyState.classList.remove('active');
+                dom.errorMsg.classList.remove('active');
+                dom.toolsGrid.innerHTML = tools.map((tool, i) => createToolCard(tool, i)).join('');
+                dom.toolCountRow.innerHTML = `<span>工具数量: ${tools.length}</span>`;
             };
 
-            // ==================== 数据加载 ====================
-
-            /** 尝试通过单一协议请求清单，404 返回 null，其他错误抛异常 */
-            const tryFetchManifest = async (domain, filename, protocol) => {
+            const fetchWithProtocol = async (domain, filename, protocol) => {
                 const url = `${protocol}://${domain}/${filename}`;
-                debug.log(`回退: 正在尝试${protocol.toUpperCase()}加载清单: ${url}`);
                 const res = await fetch(url, { mode: 'cors', headers: { Accept: 'application/json' } });
                 if (!res.ok) {
-                    if (res.status === 404) {
-                        debug.log(`回退: 清单文件不存在: ${url}`, 'warn');
-                        return null;
-                    }
-                    throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+                    if (res.status === 404) return null;
+                    throw new Error(`HTTP ${res.status} ${res.statusText}`);
                 }
                 const manifest = await res.json();
-                debug.log(`回退: 成功加载清单(${protocol.toUpperCase()}): ${domain} (${filename})`, 'success');
                 manifest._fallback_loaded = true;
+                manifest._source = domain;
                 return manifest;
             };
 
-            /** 先尝试本地缓存，失败则回退到直接请求 */
-            const fetchManifestFromCache = async domain => {
-                try {
-                    const safeDomain = domain.replace(/[\\/:*?"<>|.-]/g, '_');
-                    let cachedData = null;
-                    let usedCacheFile = null;
-
-                    for (const type of MANIFEST_TYPES) {
-                        const fileName = `${safeDomain}_${type}.json`;
-                        const cacheUrl = `/manifest-cache/domains/${fileName}`;
-                        debug.log(`正在从缓存加载清单: ${cacheUrl}`);
-                        try {
-                            const res = await fetch(cacheUrl);
-                            if (res.ok) {
-                                cachedData = await res.json();
-                                usedCacheFile = fileName;
-                                break;
-                            }
-                        } catch { /* 缓存文件不存在，继续 */ }
-                    }
-
-                    if (!cachedData) throw new Error(`没有找到缓存文件: ${domain}`);
-                    debug.log(`成功从缓存加载工具: ${cachedData.name} (缓存文件: ${usedCacheFile})`, 'success');
-                    return cachedData;
-                } catch (error) {
-                    debug.log(`缓存加载失败 ${domain}: ${error.message}`, 'warn');
-                    debug.log(`正在回退到直接请求原始服务器: ${domain}`);
-                    return fetchManifestDirect(domain);
-                }
-            };
-
-            /** 直接请求远程清单：对每种文件依次尝试 HTTPS → HTTP */
-            const fetchManifestDirect = async domain => {
-                const processedDomain = processWildcardDomain(domain);
-                let lastError = null;
-
-                for (const filename of MANIFEST_FILES) {
-                    // 先尝试 HTTPS
+            const fetchDirect = async (domain) => {
+                const resolved = processWildcard(domain);
+                for (const file of ['clra_manifest.json', 'jfkl_manifest.json']) {
                     try {
-                        const result = await tryFetchManifest(processedDomain, filename, 'https');
+                        const result = await fetchWithProtocol(resolved, file, 'https');
                         if (result) return result;
-                        // HTTPS 返回 404，直接尝试下一个文件
-                    } catch (httpsErr) {
-                        debug.log(`回退: HTTPS请求失败，尝试HTTP: ${httpsErr.message}`, 'warn');
-                        // HTTPS 其他错误，尝试 HTTP
+                    } catch (e) {
                         try {
-                            const result = await tryFetchManifest(processedDomain, filename, 'http');
+                            const result = await fetchWithProtocol(resolved, file, 'http');
                             if (result) return result;
-                        } catch (httpErr) {
-                            debug.log(`回退: HTTP请求也失败: ${httpErr.message}`, 'warn');
-                            lastError = httpsErr;
-                        }
+                        } catch (e2) {}
                     }
                 }
-
-                // 构造可读错误信息
-                let errorMsg = lastError ? lastError.message : '未知错误';
-                if (errorMsg.includes('CORS') || errorMsg.includes('Access-Control-Allow-Origin')) {
-                    errorMsg = '跨域请求被阻止 - 请联系工具提供者配置 CORS 策略';
-                } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('network')) {
-                    errorMsg = '网络连接失败 - 请检查网络连接或域名是否可达';
-                } else if (errorMsg.includes('HTTP 404') || errorMsg.includes('清单文件不存在')) {
-                    errorMsg = '工具清单文件不存在 - 请确认域名下有 clra_manifest.json 或 jfkl_manifest.json 文件';
-                }
-                debug.log(`回退: 加载清单失败 ${domain}: ${errorMsg}`, 'error');
-
-                return {
-                    name: `加载失败: ${domain}`,
-                    developer: '系统',
-                    version: 'N/A',
-                    description: `无法加载此工具\n原因: ${errorMsg}\n\n请检查:\n1. 网络连接是否正常\n2. 域名配置是否正确\n3. 域名下是否有 clra_manifest.json 或 jfkl_manifest.json 文件\n4. 联系工具提供者解决CORS问题`,
-                    update_content: null,
-                    url: null,
-                    download_url: [],
-                    icon_url: null,
-                    isError: true,
-                };
+                log(`无法从 ${domain} 获取清单`, 'error');
+                return null;
             };
 
-            /** 加载域名配置文件 */
+            const fetchFromCache = async (domain) => {
+                const safe = domain.replace(/[^a-zA-Z0-9]/g, '_');
+                const types = ['clra_manifest', 'jfkl_manifest'];
+                for (const type of types) {
+                    const cacheUrl = `/manifest-cache/domains/${safe}_${type}.json`;
+                    try {
+                        const res = await fetch(cacheUrl);
+                        if (res.ok) {
+                            const data = await res.json();
+                            data._source = domain;
+                            log(`缓存命中: ${domain}`, 'success');
+                            return data;
+                        }
+                    } catch (_) {}
+                }
+                log(`缓存未命中 ${domain}，回退实时请求`, 'warn');
+                const directData = await fetchDirect(domain);
+                if (directData) directData._source = domain;
+                return directData;
+            };
+
             const loadConfig = async () => {
-                try {
-                    debug.log('正在加载配置文件: clra_urls.txt');
-                    const res = await fetch('./clra_urls.txt');
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const domains = (await res.text())
-                        .split('\n')
-                        .map(l => l.trim())
-                        .filter(l => l && !l.startsWith('#'));
-                    debug.log(`成功加载 ${domains.length} 个域名配置`, 'success');
-                    return domains;
-                } catch (error) {
-                    debug.log(`加载配置文件失败: ${error.message}`, 'error');
-                    return [];
-                }
+                const res = await fetch('./clra_urls.txt');
+                if (!res.ok) throw new Error(`配置文件 HTTP ${res.status}`);
+                const text = await res.text();
+                const domains = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+                log(`加载 ${domains.length} 个域名`, 'success');
+                return domains;
             };
 
-            /** 加载缓存元数据 */
-            const loadCacheMetadata = async () => {
+            const loadCacheMeta = async () => {
                 try {
-                    debug.log('正在加载缓存元数据');
                     const res = await fetch('/manifest-cache/metadata.json');
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const metadata = await res.json();
-                    debug.log(`缓存元数据加载成功，最后同步时间: ${metadata.last_sync}`, 'success');
-                    return metadata;
-                } catch (error) {
-                    debug.log(`缓存元数据加载失败: ${error.message}`, 'warn');
-                    return null;
-                }
+                    if (!res.ok) return null;
+                    return await res.json();
+                } catch (_) { return null; }
             };
 
-            /** 更新缓存状态行 UI */
-            const updateCacheStatus = metadata => {
-                const row = dom.cacheStatusRow;
-                if (!row) return;
-
-                if (!metadata) {
-                    row.innerHTML = '<span><i class="fas fa-database"></i> <span class="cache-indicator cache-error"></span> 缓存不可用</span>'
-                        + '<span class="cache-time">元数据加载失败</span>';
+            const updateCacheUI = (meta) => {
+                if (!meta) {
+                    dom.cacheStatusRow.innerHTML = '<span><i class="fas fa-database"></i> <span class="cache-dot error"></span> 缓存不可用</span>';
+                    dom.cacheDetailRow.innerHTML = '<span>最后同步: --</span>';
                     return;
                 }
-
-                const lastSync = new Date(metadata.last_sync);
-                const diffHours = Math.floor((Date.now() - lastSync.getTime()) / 3600000);
-
-                let statusClass, statusText;
-                if (diffHours > 24) { statusClass = 'cache-error'; statusText = '缓存过期'; }
-                else if (diffHours > 2) { statusClass = 'cache-stale'; statusText = '缓存较旧'; }
-                else { statusClass = 'cache-fresh'; statusText = '缓存正常'; }
-
-                row.innerHTML = `<span><i class="fas fa-database"></i> ${statusText} <span class="cache-indicator ${statusClass}"></span></span>`
-                    + `<span class="cache-time">${lastSync.toISOString()}</span>`;
+                const last = new Date(meta.last_sync);
+                const hours = (Date.now() - last.getTime()) / 3600000;
+                let cls, text;
+                if (hours > 24) { cls = 'error'; text = '过期'; }
+                else if (hours > 2) { cls = 'stale'; text = '较旧'; }
+                else { cls = 'fresh'; text = '正常'; }
+                dom.cacheStatusRow.innerHTML = `<span><i class="fas fa-database"></i> ${text} <span class="cache-dot ${cls}"></span></span>`;
+                dom.cacheDetailRow.innerHTML = `<span>最后同步: ${last.toLocaleString()}</span>`;
             };
 
-            // ==================== 事件绑定 ====================
-
-            const bindEvents = () => {
-                // 点击外部关闭设置面板
-                document.addEventListener('click', e => {
-                    const { settingsPanel: panel, settingsToggle: toggle } = dom;
-                    if (panel && toggle && !panel.contains(e.target) && !toggle.contains(e.target)) {
-                        settingsPanel.close();
-                    }
-                });
-
-                // 设置面板内部阻止冒泡
-                dom.settingsPanel.addEventListener('click', e => e.stopPropagation());
-
-                // 菜单按钮
-                dom.settingsToggle.addEventListener('click', e => {
-                    e.stopPropagation();
-                    settingsPanel.toggle();
-                });
-
-                // 键盘支持：Enter 激活菜单按钮，Escape 关闭面板
-                dom.settingsToggle.addEventListener('keydown', e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        settingsPanel.toggle();
-                    }
-                });
-
-                document.addEventListener('keydown', e => {
-                    if (e.key === 'Escape' && state.panelOpen) settingsPanel.close();
-                });
-
-                // 关闭按钮
-                dom.settingsClose.addEventListener('click', () => settingsPanel.close());
-
-                // 主题切换
-                dom.themeToggle.addEventListener('click', () => themeManager.toggle());
+            const isValidTool = (tool) => {
+                if (!tool) return false;
+                return !!(tool.name || tool.description || (tool.download_url && tool.download_url.length));
             };
-
-            // ==================== 初始化 ====================
 
             const init = async () => {
                 dom.loading.classList.add('active');
-
+                dom.emptyState.classList.remove('active');
+                dom.errorMsg.classList.remove('active');
                 try {
-                    debug.log('应用初始化开始');
+                    const [meta, domains] = await Promise.all([loadCacheMeta(), loadConfig()]);
+                    updateCacheUI(meta);
+                    if (!domains.length) throw new Error('无域名配置');
 
-                    // 元数据和配置互相独立，并行加载
-                    const [metadata, domains] = await Promise.all([
-                        loadCacheMetadata(),
-                        loadConfig(),
-                    ]);
-
-                    updateCacheStatus(metadata);
-
-                    if (domains.length === 0) throw new Error('没有找到有效的域名配置');
-
-                    // 并行请求所有域名清单
-                    const manifests = await Promise.all(domains.map(fetchManifestFromCache));
-
-                    // 按 name 去重（保持首次出现的优先）
+                    const manifests = await Promise.all(domains.map(fetchFromCache));
                     const seen = new Set();
-                    const uniqueTools = [];
+                    const tools = [];
                     for (const m of manifests) {
                         if (!m) continue;
-                        if (seen.has(m.name)) {
-                            debug.log(`发现重复工具: ${m.name}，已跳过`, 'warn');
-                            continue;
-                        }
+                        if (seen.has(m.name)) continue;
+                        if (!isValidTool(m)) continue;
                         seen.add(m.name);
-                        uniqueTools.push(m);
+                        tools.push(m);
                     }
-                    state.tools = uniqueTools;
+                    log(`加载完成: 有效工具 ${tools.length}`, 'success');
 
-                    // 统计各类工具数量（单次遍历）
-                    let cachedCount = 0, fallbackCount = 0, errorCount = 0;
-                    for (const t of state.tools) {
-                        if (t.isError) errorCount++;
-                        else if (t._fallback_loaded) fallbackCount++;
-                        else cachedCount++;
-                    }
-                    debug.log(`加载完成: 缓存工具 ${cachedCount} 个, 回退工具 ${fallbackCount} 个, 错误工具 ${errorCount} 个`, 'success');
-
-                    // 回退警告
+                    const fallbackCount = tools.filter(t => t._fallback_loaded).length;
                     if (fallbackCount > 0 && dom.cacheStatusRow) {
-                        const warning = document.createElement('div');
-                        warning.className = 'cache-warning-row';
-                        warning.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${fallbackCount} 个工具使用实时加载`;
-                        dom.cacheStatusRow.after(warning);
+                        const exist = document.querySelector('.cache-warning');
+                        if (!exist) {
+                            const warn = document.createElement('div');
+                            warn.className = 'setting-row cache-warning';
+                            warn.innerHTML = `<span><i class="fas fa-exclamation-circle"></i> ${fallbackCount} 个工具使用实时加载</span>`;
+                            dom.cacheStatusRow.after(warn);
+                        }
                     }
-
-                    renderTools();
-                } catch (error) {
-                    debug.log(`初始化失败: ${error.message}`, 'error');
+                    renderTools(tools);
+                } catch (e) {
+                    log(`初始化失败: ${e.message}`, 'error');
                     dom.loading.classList.remove('active');
-                    dom.errorMessage.classList.add('active');
+                    dom.emptyState.classList.remove('active');
+                    dom.errorMsg.classList.add('active');
                 }
             };
 
-            // ==================== 入口 ====================
+            dom.refreshBtn.addEventListener('click', init);
 
-            document.addEventListener('DOMContentLoaded', () => {
-                cacheDom();
-                themeManager.apply();
-                bindEvents();
-                init();
-            });
+            // ---------- Clarity 与 Cookie ----------
+            const loadClarityScript = (id) => {
+                if (!id) return;
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.text = `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "${id}");`;
+                document.head.appendChild(script);
+                log(`Clarity 脚本已加载: ${id}`, 'info');
+            };
 
+            const getClarityId = () => {
+                const host = window.location.hostname;
+                if (host === 'clra1.lzh173.chat') return 'wvnsox7a0p';
+                if (host === 'jfdoc.xingying.us.kg') return 'wvnu22ps48';
+                return null;
+            };
+
+            const EU_COUNTRIES = [
+                'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
+                'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','CH'
+            ];
+
+            const isEUCountry = (code) => EU_COUNTRIES.includes(code.toUpperCase());
+
+            const detectEUviaIP = () => {
+                return new Promise((resolve) => {
+                    const timeout = setTimeout(() => resolve(false), 3000);
+                    fetch('https://ipapi.co/json/')
+                        .then(res => res.ok ? res.json() : Promise.reject())
+                        .then(data => {
+                            clearTimeout(timeout);
+                            resolve(isEUCountry(data.country_code));
+                        })
+                        .catch(() => {
+                            clearTimeout(timeout);
+                            const lang = navigator.language || navigator.userLanguage || '';
+                            const code = lang.split('-')[1] || lang.split('-')[0]?.toUpperCase();
+                            resolve(code ? isEUCountry(code) : false);
+                        });
+                });
+            };
+
+            const showCookieBanner = () => {
+                dom.cookieBanner.classList.remove('hidden');
+            };
+
+            const hideCookieBanner = () => {
+                dom.cookieBanner.classList.add('hidden');
+            };
+
+            const setCookieConsent = (accepted) => {
+                localStorage.setItem('cookieConsent', accepted ? 'accepted' : 'rejected');
+                hideCookieBanner();
+                if (accepted) {
+                    const clarityId = getClarityId();
+                    if (clarityId) loadClarityScript(clarityId);
+                }
+            };
+
+            (async () => {
+                const clarityId = getClarityId();
+                if (!clarityId) {
+                    log('当前域名不加载 Clarity', 'info');
+                    return;
+                }
+
+                const existingConsent = localStorage.getItem('cookieConsent');
+                if (existingConsent === 'accepted') {
+                    loadClarityScript(clarityId);
+                    return;
+                }
+                if (existingConsent === 'rejected') return;
+
+                const isEU = await detectEUviaIP();
+                if (!isEU) {
+                    loadClarityScript(clarityId);
+                    return;
+                }
+
+                showCookieBanner();
+            })();
+
+            dom.cookieAccept.addEventListener('click', () => setCookieConsent(true));
+            dom.cookieReject.addEventListener('click', () => setCookieConsent(false));
+
+            init();
         })();
     </script>
 </body>
-
 </html>

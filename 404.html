@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面未找到 - CLRA</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" media="print" onload="this.media='all';this.onload=null;">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css"></noscript>
+    <style>
+        :root {
+            --bg: #0a1525;
+            --bg2: #0f1f35;
+            --text: #eef3ff;
+            --text2: #92a5cc;
+            --accent: #0078D4;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: radial-gradient(ellipse at center, #1a2a4a 0%, var(--bg) 70%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .error-card {
+            background: rgba(15,31,53,0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 48px 60px;
+            text-align: center;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+            max-width: 540px;
+            width: 90%;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .error-icon {
+            font-size: 5rem;
+            color: var(--accent);
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+        h1 {
+            font-size: 6rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+        p {
+            color: var(--text2);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 36px;
+        }
+        .home-btn {
+            background: var(--accent);
+            color: #fff;
+            padding: 14px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(0,120,212,0.3);
+        }
+        .home-btn:hover {
+            background: #1084e8;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,120,212,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <i class="fas fa-map-signs error-icon"></i>
+        <h1>404</h1>
+        <p>很抱歉，您访问的页面不存在或已被移除。<br>请检查网址是否正确，或点击下方按钮返回工具平台。</p>
+        <a href="./" class="home-btn"><i class="fas fa-home"></i> 返回首页</a>
+    </div>
+    <script>
+        // 读取主站设置的自定义强调色
+        (function() {
+            const savedAccent = localStorage.getItem('clra-accent');
+            if (savedAccent) {
+                document.documentElement.style.setProperty('--accent', savedAccent);
+                // 微调 hover 色
+                const adjustColor = (hex, percent) => {
+                    const num = parseInt(hex.replace('#', ''), 16);
+                    const amt = Math.round(2.55 * percent);
+                    const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+                    const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+                    const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+                    return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+                };
+                const hoverColor = adjustColor(savedAccent, 10);
+                document.documentElement.style.setProperty('--accent-hover', hoverColor);
+                // 为按钮添加 hover 样式支持
+                const style = document.createElement('style');
+                style.textContent = `.home-btn:hover { background: ${hoverColor}; }`;
+                document.head.appendChild(style);
+            }
+        })();
+    </script>
+</body>
+</html>
