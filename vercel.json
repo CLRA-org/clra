@@ -5,8 +5,12 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/clarity/:path*",
-      "destination": "https://www.clarity.ms/:path*"
+      "source": "/clarity/tag/:path*",
+      "destination": "https://www.clarity.ms/tag/:path*"
+    },
+    {
+      "source": "/clarity-proxy/:host/:path*",
+      "destination": "https://:host/:path*"
     }
   ]
 }
