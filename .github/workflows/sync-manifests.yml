@@ -2,14 +2,14 @@ name: Sync Manifests
 
 on:
   schedule:
-    - cron: '0 6-22/1 * * *'  # 北京时间6-22点每小时执行
+    - cron: '0 6-22/1 * * *'   # 北京时间6-22点每小时
   workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 授予写入仓库内容的权限
+      contents: write
 
     steps:
       - uses: actions/checkout@v3
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '24'
+          node-version: '22'        # 改用稳定的 LTS 版本
 
       - name: Install dependencies
         run: npm install
@@ -25,11 +25,10 @@ jobs:
       - name: Sync manifests
         run: node sync-manifests.js
 
-      - name: Commit changes
+      - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add manifest-cache/
+          git add public/manifest-cache/
           git commit -m "Update manifest cache" || exit 0
-          # 使用 GITHUB_TOKEN 进行推送
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push
