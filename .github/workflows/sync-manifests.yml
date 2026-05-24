@@ -1,34 +1,130 @@
-name: Sync Manifests
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const http = require('http');
 
-on:
-  schedule:
-    - cron: '0 6-22/1 * * *'   # 北京时间6-22点每小时
-  workflow_dispatch:
+// 🔧 关键路径修改：指向 public/ 目录
+const CACHE_DIR = path.join(__dirname, 'public', 'manifest-cache');
+const URLS_FILE = path.join(__dirname, 'public', 'clra_urls.txt');
+const METADATA_FILE = path.join(CACHE_DIR, 'metadata.json');
+const DOMAINS_DIR = path.join(CACHE_DIR, 'domains');
 
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+// 日志工具
+function log(level, message) {
+    const timestamp = new Date().toISOString();
+    const prefix = { info: 'ℹ️', success: '✅', error: '❌', warn: '⚠️' }[level] || 'ℹ️';
+    console.log(`[${timestamp}] ${prefix} ${message}`);
+}
 
-    steps:
-      - uses: actions/checkout@v3
+// 确保目录存在
+function ensureDir(dir) {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        log('info', `创建目录: ${path.relative(__dirname, dir)}`);
+    }
+}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'        # 改用稳定的 LTS 版本
+// 发起 HTTP/HTTPS 请求
+function fetchUrl(url, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        const client = url.startsWith('https') ? https : http;
+        const req = client.get(url, { timeout }, (res) => {
+            // 处理重定向
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                return fetchUrl(res.headers.location, timeout).then(resolve).catch(reject);
+            }
+            if (res.statusCode !== 200) {
+                return reject(new Error(`HTTP ${res.statusCode}`));
+            }
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(data));
+        });
+        req.on('error', reject);
+        req.on('timeout', () => {
+            req.destroy();
+            reject(new Error('请求超时'));
+        });
+    });
+}
 
-      - name: Install dependencies
-        run: npm install
+// 读取域名列表
+function readDomains() {
+    if (!fs.existsSync(URLS_FILE)) {
+        log('error', `配置文件 ${path.relative(__dirname, URLS_FILE)} 不存在`);
+        return [];
+    }
+    const content = fs.readFileSync(URLS_FILE, 'utf-8');
+    return content
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#'));
+}
 
-      - name: Sync manifests
-        run: node sync-manifests.js
+// 尝试拉取某个域名的清单文件
+async function fetchManifest(domain) {
+    const filenames = ['clra_manifest.json', 'jfkl_manifest.json'];
+    for (const filename of filenames) {
+        const url = `https://${domain}/${filename}`;
+        try {
+            log('info', `尝试拉取: ${url}`);
+            const data = await fetchUrl(url, 15000);
+            // 验证是否为合法 JSON
+            JSON.parse(data);
+            log('success', `成功拉取 ${domain}/${filename}`);
+            return { success: true, data, file: filename };
+        } catch (err) {
+            log('warn', `拉取 ${url} 失败: ${err.message}`);
+        }
+    }
+    return { success: false, error: '所有清单文件均无法获取' };
+}
 
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add public/manifest-cache/
-          git commit -m "Update manifest cache" || exit 0
-          git push
+// 主同步函数
+async function sync() {
+    log('info', '开始同步清单文件');
+    ensureDir(CACHE_DIR);
+    ensureDir(DOMAINS_DIR);
+
+    const domains = readDomains();
+    if (domains.length === 0) {
+        log('error', '没有找到有效的域名配置');
+        process.exit(1);
+    }
+
+    const results = {};
+    const statusList = [];
+
+    // 并发拉取，但限制并发数（可选，这里直接全并发）
+    const tasks = domains.map(async (domain) => {
+        const result = await fetchManifest(domain);
+        if (result.success) {
+            // 写入缓存文件
+            const targetFile = path.join(DOMAINS_DIR, `${domain}.json`);
+            fs.writeFileSync(targetFile, result.data, 'utf-8');
+            log('info', `已缓存: ${domain}`);
+            statusList.push({ domain, status: 'ok', file: result.file });
+        } else {
+            statusList.push({ domain, status: 'failed', error: result.error });
+        }
+        results[domain] = result;
+        return result;
+    });
+
+    await Promise.allSettled(tasks);
+
+    // 生成 metadata.json
+    const metadata = {
+        lastSync: new Date().toISOString(),
+        totalDomains: domains.length,
+        successCount: statusList.filter(s => s.status === 'ok').length,
+        domains: statusList
+    };
+    fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2), 'utf-8');
+    log('success', `同步完成，成功 ${metadata.successCount}/${metadata.totalDomains}`);
+}
+
+sync().catch(err => {
+    log('error', `同步过程致命错误: ${err.message}`);
+    process.exit(1);
+});
