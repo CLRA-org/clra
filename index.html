@@ -768,31 +768,32 @@
 
             dom.refreshBtn.addEventListener('click', init);
 
-            // ====================  Clarity 与 Cookie（核心修改） ====================
-            // 统一的第一方代理配置函数，在任何脚本加载前设置
-            const setupClarity = (id) => {
-                if (!id) return;
+            // ====================  Clarity 与 Cookie（Worker 代理版） ====================
+            // ★ 你的 Worker 代理域名（请确保已正确绑定并部署）
+            const CLARITY_PROXY_BASE = 'https://proxy.api.xingying.us.kg/clarity-proxy';
 
-                // ★ 最重要的一步：声明第一方代理，必须在加载主脚本之前
-                window.clarityConfig = {
-                    proxy: '/clarity-proxy'
-                };
-
-                // 动态创建脚本标签，通过反向代理路径加载主脚本
-                const script = document.createElement('script');
-                script.async = 1;
-                script.src = '/clarity/tag/' + id;
-                document.head.appendChild(script);
-
-                log(`Clarity 已通过第一方代理加载: ${id}`, 'info');
-            };
-
-            // 根据域名返回对应的 Clarity 项目 ID
             const getClarityId = () => {
                 const host = window.location.hostname;
                 if (host === 'clra1.lzh173.chat') return 'wvnsox7a0p';
                 if (host === 'jfdoc.xingying.us.kg') return 'wvnu22ps48';
                 return null;
+            };
+
+            const setupClarity = (id) => {
+                if (!id) return;
+
+                // 启用第一方代理模式，让 Clarity 所有内部请求都走 Worker
+                window.clarityConfig = {
+                    proxy: CLARITY_PROXY_BASE
+                };
+
+                // 动态加载主脚本，也通过 Worker 代理
+                const script = document.createElement('script');
+                script.async = 1;
+                script.src = `${CLARITY_PROXY_BASE}/www.clarity.ms/tag/${id}`;
+                document.head.appendChild(script);
+
+                log(`Clarity 已通过代理加载: ${id}`, 'info');
             };
 
             const EU_COUNTRIES = [
@@ -820,13 +821,8 @@
                 });
             };
 
-            const showCookieBanner = () => {
-                dom.cookieBanner.classList.remove('hidden');
-            };
-
-            const hideCookieBanner = () => {
-                dom.cookieBanner.classList.add('hidden');
-            };
+            const showCookieBanner = () => dom.cookieBanner.classList.remove('hidden');
+            const hideCookieBanner = () => dom.cookieBanner.classList.add('hidden');
 
             const setCookieConsent = (accepted) => {
                 localStorage.setItem('cookieConsent', accepted ? 'accepted' : 'rejected');
@@ -837,7 +833,6 @@
                 }
             };
 
-            // 页面加载时判断是否加载 Clarity
             (async () => {
                 const clarityId = getClarityId();
                 if (!clarityId) {
@@ -864,7 +859,6 @@
             dom.cookieAccept.addEventListener('click', () => setCookieConsent(true));
             dom.cookieReject.addEventListener('click', () => setCookieConsent(false));
 
-            // 启动应用
             init();
         })();
     </script>
