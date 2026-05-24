@@ -23,7 +23,7 @@
             --shadow: 0 8px 32px rgba(0,0,0,0.4);
             --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        。light-theme {
+        .light-theme {
             --bg: #f2f6fc;
             --bg2: #ffffff;
             --bg-sidebar: #e9f0f8;
@@ -58,8 +58,8 @@
         .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 20px; }
         @keyframes spin { to { transform:rotate(360deg); } }
         .error-msg i, .empty-state i { font-size:3.5rem; margin-bottom:20px; }
-        。empty-state i { color:var(--accent); opacity:0.6; }
-        。empty-btn { background:var(--accent); color:#fff; border:none; padding:12px 28px; border-radius:8px; cursor:pointer; font-size:14px; display:inline-flex; align-items:center; gap:8px; margin-top:24px; font-weight:600; transition:all var(--transition); }
+        .empty-state i { color:var(--accent); opacity:0.6; }
+        .empty-btn { background:var(--accent); color:#fff; border:none; padding:12px 28px; border-radius:8px; cursor:pointer; font-size:14px; display:inline-flex; align-items:center; gap:8px; margin-top:24px; font-weight:600; transition:all var(--transition); }
         .empty-btn:hover { background:var(--accent-hover); transform:translateY(-2px); }
         .cors-info { background:var(--btn-bg); border-left:4px solid var(--accent); padding:20px; border-radius:0 var(--radius) var(--radius) 0; text-align:left; margin:24px auto; max-width:520px; color:var(--text2); }
         .tools-grid { display:flex; flex-wrap:wrap; gap:20px; }
@@ -83,7 +83,7 @@
         .btn { display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 18px; border-radius:var(--radius); font-weight:600; text-decoration:none; font-size:0.85rem; transition:all var(--transition); border:none; cursor:pointer; font-family:inherit; }
         .btn-primary { background:var(--accent); color:#fff; }
         .btn-primary:hover { background:var(--accent-hover); transform:translateY(-1px); }
-        。btn-secondary { background:var(--btn-bg); border:1px solid var(--btn-border); color:var(--text); }
+        .btn-secondary { background:var(--btn-bg); border:1px solid var(--btn-border); color:var(--text); }
         .btn-secondary:hover { background:var(--accent); border-color:var(--accent); color:#fff; transform:translateY(-1px); }
         footer { text-align:center; padding:24px; color:var(--text2); font-size:0.85rem; border-top:1px solid var(--border); margin-top:40px; }
         .settings-panel { position:fixed; top:88px; right:28px; width:380px; max-width:calc(100vw - 40px); background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow); z-index:1000; opacity:0; transform:translateY(-12px) scale(0.95); pointer-events:none; transition:all 0.2s ease; max-height:90vh; overflow-y:auto; }
@@ -111,7 +111,7 @@
         .cache-warning { color:#f59e0b; }
         .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:2000; opacity:0; pointer-events:none; transition:opacity 0.2s; }
         .modal-overlay.visible { opacity:1; pointer-events:auto; }
-        。modal-content { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-card); padding:32px 36px; max-width:460px; width:90%; color:var(--text); box-shadow:var(--shadow); }
+        .modal-content { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-card); padding:32px 36px; max-width:460px; width:90%; color:var(--text); box-shadow:var(--shadow); }
         .modal-content h2 { color:var(--accent); margin-bottom:18px; font-size:1.4rem; }
         .modal-version, .modal-author, .modal-group, .modal-desc { margin-bottom:6px; font-size:14px; color:var(--text2); }
         .modal-license { margin-top:20px; padding-top:16px; border-top:1px solid var(--border); font-size:13px; color:var(--text2); }
@@ -768,41 +768,41 @@
 
             dom.refreshBtn.addEventListener('click', init);
 
-// ====================  Clarity 与 Cookie（Worker 代理版） ====================
-// ★ 你的 Worker 代理域名
-const CLARITY_PROXY_BASE = 'https://proxy.api.xingying.us.kg/clarity-proxy';
+            // ====================  Clarity 与 Cookie（Worker 代理版） ====================
+            // ★ 你的 Worker 代理域名
+            const CLARITY_PROXY_BASE = 'https://proxy.api.xingying.us.kg/clarity-proxy';
 
-// ★ 默认 Clarity 项目 ID（所有未知域名最终都会使用这个 ID）
-const DEFAULT_CLARITY_ID = 'wvnu22ps48';
+            // ★ 默认 Clarity 项目 ID（所有未知域名最终都会使用这个 ID）
+            const DEFAULT_CLARITY_ID = 'wvnu22ps48';
 
-// 获取当前域名对应的项目 ID（不再返回 null，未知域名返回默认 ID）
-const getClarityId = () => {
-    const host = window.location.hostname;
-    if (host === 'clra1.lzh173.chat') return 'wvnsox7a0p';
-    // 其他所有域名都使用默认 ID，Worker 会根据 Host 头覆盖为正确的 ID
-    return DEFAULT_CLARITY_ID;
-};
+            // 获取当前域名对应的项目 ID（不再返回 null，未知域名返回默认 ID）
+            const getClarityId = () => {
+                const host = window.location.hostname;
+                if (host === 'clra1.lzh173.chat') return 'wvnsox7a0p';
+                // 其他所有域名都使用默认 ID，Worker 会根据 Host 头覆盖为正确的 ID
+                return DEFAULT_CLARITY_ID;
+            };
 
-const setupClarity = (id) => {
-    if (!id) return;
+            const setupClarity = (id) => {
+                if (!id) return;
 
-    // 启用第一方代理模式，让 Clarity 所有内部请求都走 Worker
-    window.clarityConfig = {
-        proxy: CLARITY_PROXY_BASE
-    };
+                // 启用第一方代理模式，让 Clarity 所有内部请求都走 Worker
+                window.clarityConfig = {
+                    proxy: CLARITY_PROXY_BASE
+                };
 
-    // 动态加载主脚本，也通过 Worker 代理
-    const script = document.createElement('script');
-    script.async = 1;
-    script.src = `${CLARITY_PROXY_BASE}/www.clarity.ms/tag/${id}`;
-    document.head.appendChild(script);
+                // 动态加载主脚本，也通过 Worker 代理
+                const script = document.createElement('script');
+                script.async = 1;
+                script.src = `${CLARITY_PROXY_BASE}/www.clarity.ms/tag/${id}`;
+                document.head.appendChild(script);
 
-    log(`Clarity 已通过代理加载 (前端ID: ${id})`, 'info');
-};
+                log(`Clarity 已通过代理加载 (前端ID: ${id})`, 'info');
+            };
 
             const EU_COUNTRIES = [
                 'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
-                'LV','LT','LU','MT','NL','PL','PT','RO','SK'，'SI'，'ES','SE','IS','LI','NO','CH'
+                'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','CH'
             ];
 
             const isEUCountry = (code) => EU_COUNTRIES.includes(code.toUpperCase());
