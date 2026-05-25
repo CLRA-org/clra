@@ -446,7 +446,7 @@
             dom.refreshBtn.addEventListener('click', init);
 
             // ====================  Clarity 与 Cookie（Worker 代理版） ====================
-            const CLARITY_PROXY_BASE = 'https://proxy.api.xingying.us.kg/clarity-proxy';
+            const CLARITY_PROXY_BASE = 'https://proxy.api.xingying.us.kg/cproxy';
             const DEFAULT_CLARITY_ID = 'wvnu22ps48';
 
             const getClarityId = () => {
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // === 完全代理 Clarity（代理 clarity.js 并手动初始化） ===
 function initClarity(projectId) {
-  const proxyBase = 'https://proxy.api.xingying.us.kg/clarity-proxy';
+  const proxyBase = 'https://proxy.api.xingying.us.kg/cproxy';
 
   // 定义 window.clarity 队列
   window.clarity = window.clarity || function() {
@@ -672,3 +672,4 @@ function initClarity(projectId) {
     }
   });
 })();
+
