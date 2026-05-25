@@ -528,3 +528,66 @@
 
             init();
         })();
+// === 移动端侧边栏切换 ===
+document.addEventListener('DOMContentLoaded', function() {
+  var hamburger = document.querySelector('.hamburger-btn');
+  var sidebar = document.querySelector('.sidebar');
+  if (hamburger && sidebar) {
+    hamburger.addEventListener('click', function() {
+      sidebar.classList.toggle('open');
+      document.body.classList.toggle('sidebar-open');
+    });
+    // 点击侧边栏外部关闭（可选）
+    sidebar.addEventListener('click', function(e) {
+      if (e.target === sidebar) {
+        sidebar.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+      }
+    });
+  }
+});
+
+
+// === 完全代理 Clarity（代理 clarity.js 并手动初始化） ===
+function initClarity(projectId) {
+  const proxyBase = 'https://proxy.api.xingying.us.kg/clarity-proxy';
+
+  // 定义 window.clarity 队列
+  window.clarity = window.clarity || function() {
+    (window.clarity.q = window.clarity.q || []).push(arguments);
+  };
+
+  // 通过代理加载 clarity.js（版本保持与官方同步）
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = proxyBase + '/scripts.clarity.ms/0.8.64/clarity.js';
+  script.onload = function() {
+    // clarity.js 加载完成后，手动启动项目
+    window.clarity('start', {
+      projectId: projectId,
+      upload: proxyBase + '/i.clarity.ms/collect',  // 上报也走代理
+      expire: 365,
+      cookies: ['_uetmsclkid', '_uetvid', '_clck'],
+      track: false,
+      content: true,
+      unmask: ['body'],
+      dob: 2336
+    });
+  };
+  document.head.appendChild(script);
+}
+
+// 启动 Clarity（使用当前域名对应的项目 ID）
+(function() {
+  const host = window.location.hostname;
+  let projectId = 'wvnu22ps48'; // 默认
+  if (host === 'clra1.lzh173.chat') projectId = 'wvnsox7a0p';
+  // 可根据需要添加更多映射
+
+  // 等待页面基本加载后初始化（避免阻塞）
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initClarity(projectId));
+  } else {
+    initClarity(projectId);
+  }
+})();
