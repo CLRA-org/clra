@@ -1,10 +1,261 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
+
 <BaseLayout title="页面未找到 · CLRA">
-  <main style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:2rem;">
-    <h1 style="font-size:5rem;margin:0;line-height:1;color:var(--accent);">404</h1>
-    <p style="margin:1rem 0;color:var(--text2);">你访问的页面不存在或已被移除。</p>
-    <a href="/" style="background:var(--accent);color:#fff;padding:0.6rem 1.5rem;border-radius:10px;text-decoration:none;font-weight:600;">← 返回首页</a>
+  <main class="not-found-main">
+    <!-- 背景光晕 -->
+    <div class="glow"></div>
+
+    <!-- 装饰圆点 -->
+    <div class="deco-dot dot-1"></div>
+    <div class="deco-dot dot-2"></div>
+    <div class="deco-dot dot-3"></div>
+
+    <!-- 主体内容 -->
+    <div class="content">
+      <h1 class="error-code">404</h1>
+      <p class="message">你访问的页面不存在或已被移除。</p>
+      <a href="/" class="back-btn">
+        <span class="arrow">←</span> 返回首页
+      </a>
+    </div>
   </main>
 </BaseLayout>
+
+<style>
+  .not-found-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.8s ease-out;
+  }
+
+  /* ===== 背景光晕 ===== */
+  .glow {
+    position: absolute;
+    width: clamp(320px, 50vw, 600px);
+    height: clamp(320px, 50vw, 600px);
+    border-radius: 50%;
+    background: var(--accent, #4f6ef7);
+    opacity: 0.07;
+    filter: blur(80px);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: breathe 6s ease-in-out infinite;
+  }
+
+  /* ===== 装饰圆点 ===== */
+  .deco-dot {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--accent, #4f6ef7);
+    pointer-events: none;
+  }
+
+  .dot-1 {
+    width: 8px;
+    height: 8px;
+    top: 18%;
+    right: 22%;
+    opacity: 0.35;
+    animation: floatA 5s ease-in-out infinite;
+  }
+
+  .dot-2 {
+    width: 5px;
+    height: 5px;
+    bottom: 24%;
+    left: 20%;
+    opacity: 0.25;
+    animation: floatB 7s ease-in-out infinite;
+  }
+
+  .dot-3 {
+    width: 10px;
+    height: 10px;
+    top: 55%;
+    right: 16%;
+    opacity: 0.2;
+    animation: floatA 6s ease-in-out infinite 1.5s;
+  }
+
+  /* ===== 主体内容 ===== */
+  .content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .error-code {
+    font-size: clamp(6rem, 15vw, 11rem);
+    font-weight: 900;
+    line-height: 1;
+    margin: 0;
+    color: var(--accent, #4f6ef7);
+    text-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.06),
+      0 8px 30px rgba(0, 0, 0, 0.08);
+    letter-spacing: -0.03em;
+    user-select: none;
+    animation: subtleFloat 5s ease-in-out infinite;
+  }
+
+  .message {
+    margin: 0 0 0.5rem;
+    color: var(--text2, #6b7280);
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    max-width: 320px;
+  }
+
+  /* ===== 返回按钮 ===== */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent, #4f6ef7);
+    color: #fff;
+    padding: 0.7rem 1.8rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.06);
+    transition:
+      transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.3s ease,
+      background 0.25s ease;
+  }
+
+  .back-btn:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 8px 25px rgba(0, 0, 0, 0.15),
+      0 3px 8px rgba(0, 0, 0, 0.08);
+    filter: brightness(1.08);
+  }
+
+  .back-btn:active {
+    transform: translateY(-1px);
+    filter: brightness(0.95);
+    transition: transform 0.1s ease;
+  }
+
+  .arrow {
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .back-btn:hover .arrow {
+    transform: translateX(-5px);
+  }
+
+  /* ===== 动画关键帧 ===== */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes subtleFloat {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.06;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 0.1;
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+  }
+
+  @keyframes floatA {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    33% {
+      transform: translate(6px, -14px);
+    }
+    66% {
+      transform: translate(-4px, 10px);
+    }
+  }
+
+  @keyframes floatB {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    33% {
+      transform: translate(-8px, -8px);
+    }
+    66% {
+      transform: translate(6px, 12px);
+    }
+  }
+
+  /* ===== 响应式微调 ===== */
+  @media (max-width: 480px) {
+    .not-found-main {
+      min-height: 60vh;
+      padding: 1.5rem 1rem;
+    }
+
+    .glow {
+      width: 240px;
+      height: 240px;
+      filter: blur(60px);
+    }
+
+    .back-btn {
+      padding: 0.6rem 1.4rem;
+      font-size: 0.95rem;
+      border-radius: 10px;
+    }
+
+    .dot-1 {
+      top: 12%;
+      right: 10%;
+    }
+    .dot-2 {
+      bottom: 18%;
+      left: 8%;
+    }
+    .dot-3 {
+      top: 50%;
+      right: 6%;
+    }
+  }
+</style>
