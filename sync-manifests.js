@@ -13,7 +13,7 @@ const http = require('http');
 
 // 配置（修改点：使用 public 目录下的 URL 文件）
 const CONFIG_FILE = './public/clra_urls.txt';
-const CACHE_DIR = './manifest-cache';
+const CACHE_DIR = './public/manifest-cache';
 const DOMAINS_CACHE_DIR = path.join(CACHE_DIR, 'domains');
 const METADATA_FILE = path.join(CACHE_DIR, 'metadata.json');
 

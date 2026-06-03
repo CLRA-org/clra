@@ -1,6 +1,6 @@
 {
-  "last_sync": "2026-05-23T22:52:09.402Z",
-  "total_tools": 3,
+  "last_sync": "2026-06-03T10:29:26.734Z",
+  "total_tools": 4,
   "domains": [
     {
       "domain": "clib.cc.cd",
@@ -12,7 +12,13 @@
       "domain": "maxlhy0424.is-a.dev",
       "cache_file": "maxlhy0424_is_a_dev_clra_manifest.json",
       "tool_name": "SCLTK",
-      "version": "7.1.5"
+      "version": "7.2.0 (Insider)"
+    },
+    {
+      "domain": "*.pp1p.cfd",
+      "cache_file": "__pp1p_cfd_clra_manifest.json",
+      "tool_name": "ClassZero",
+      "version": "1.4.1"
     },
     {
       "domain": "sbzm.lzh173.chat",
