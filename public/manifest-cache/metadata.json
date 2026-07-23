@@ -1,6 +1,6 @@
 {
-  "last_sync": "2026-07-23T15:53:49.921Z",
-  "total_tools": 3,
+  "last_sync": "2026-07-23T17:20:29.984Z",
+  "total_tools": 2,
   "domains": [
     {
       "domain": "clib.cc.cd",
@@ -13,11 +13,6 @@
       "cache_file": "scltk_maxlhy0424_is_a_dev_clra_manifest.json",
       "tool_name": "SCLTK & SCLTK-Legacy",
       "version": "7.2.0 (Insider)"
-    },
-    {
-      "domain": "*.jfglss.icu",
-      "cache_file": "__jfglss_icu_jfkl_manifest.json",
-      "version": "0.0.20"
     }
   ],
   "version": "1.0.0"
