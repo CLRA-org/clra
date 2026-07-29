@@ -6,8 +6,8 @@
   "description": "现代 C++ 开发，支持破解/恢复多款电子教室软件。",
   "url": "https://scltk.maxlhy0424.is-a.dev",
   "download_url": [
-    "SCLTK-Mainline: https://scltk.maxlhy0424.is-a.dev/assets/stable_builds/SCLTK-Mainline.exe",
-    "SCLTK-Legacy: https://scltk.maxlhy0424.is-a.dev/assets/stable_builds/SCLTK-Legacy.exe"
+    "SCLTK-Mainline: https://scltk.maxlhy0424.is-a.dev/assets/stable-builds/SCLTK-Mainline.exe",
+    "SCLTK-Legacy: https://scltk.maxlhy0424.is-a.dev/assets/stable-builds/SCLTK-Legacy.exe"
   ],
   "icon_url": "scltk.maxlhy0424.is-a.dev/assets/SCLTK-icon.webp"
 }
