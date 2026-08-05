@@ -8,7 +8,5 @@
     "最新0.20版下载:https://*.jfglss.icu/ss.jpg",
     "原版云控0.16版（不建议）下载:https://*.jfglss.icu/3.jpg"
   ],
-  "icon_url": "https://*.jfglss.icu/icon.ico",
-  "ai_test": "防止恶意逆向,暂时禁用本功能",
-  "notice": "本软件仅供学习交流使用,请勿用于非法用途,否则后果自负\n本次更新新增了针对“助手v13.1的快速清理及官网的完全重写、云控新增aes加密算法\n请所有用户立刻进行更新(已更新请忽略)!"
+  "icon_url": "https://*.jfglss.icu/icon.ico"
 }
