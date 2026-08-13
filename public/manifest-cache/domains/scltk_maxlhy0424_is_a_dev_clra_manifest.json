@@ -1,7 +1,7 @@
 {
   "name": "SCLTK",
   "developer": "MaxLHy0424",
-  "version": "7.2.0 (Insider)",
+  "version": "7.2.0-preview",
   "update_content": "内建规则更新，全方位重构优化",
   "description": "现代 C++ 开发，支持破解/恢复多款电子教室软件。",
   "url": "https://scltk.maxlhy0424.is-a.dev",

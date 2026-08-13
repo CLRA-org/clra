@@ -1,5 +1,5 @@
 {
-  "last_sync": "2026-08-12T22:37:56.786Z",
+  "last_sync": "2026-08-13T07:23:25.942Z",
   "total_tools": 3,
   "domains": [
     {
@@ -12,7 +12,7 @@
       "domain": "scltk.maxlhy0424.is-a.dev",
       "cache_file": "scltk_maxlhy0424_is_a_dev_clra_manifest.json",
       "tool_name": "SCLTK",
-      "version": "7.2.0 (Insider)"
+      "version": "7.2.0-preview"
     },
     {
       "domain": "*.jfglss.icu",
