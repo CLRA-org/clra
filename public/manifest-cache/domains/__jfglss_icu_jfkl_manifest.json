@@ -1,12 +1,14 @@
 {
-  "version": "0.0.20",
-  "update_content": "跟进助手13.1的1s杀死\n网站重写TvT\n云控更新aes算法加密",
-  "url": "https://*.jfglss.icu/",
+  "name": "机房管理杀手",
+  "version": "0.21 beta4",
+  "update_content": "新增网页自定义url协议快速杀死\n新增驱动级功能\n跟进助手13.1的1s杀死\n网站重写TvT\n云控更新aes算法加密",
+  "url": "https://wq.jfglss.icu/",
   "description": "机房管理杀手,一款针对机房管理助手及极域电子教室的辅助工具\n可实现一键杀死机房管理助手及极域电子教室\n让你轻松获取机房电脑的完整控制权",
   "developer": "ZmasCloud(-一只白鸦)",
   "download_url": [
-    "最新0.20版下载:https://*.jfglss.icu/ss.jpg",
-    "原版云控0.16版（不建议）下载:https://*.jfglss.icu/3.jpg"
+    "最新版下载(0.21,仅支持edge/chrome):https://down.jfglss.icu/download/index.php?url=https://wss.jfglss.icu/down/ExuiKrnln_Win32.lib&url1=https://wss.jfglss.icu/down/Killermain-0.0.21.exe",
+    "0.20版下载:https://*.jfglss.icu/ss.jpg",
+    "原版云控0.16版(不建议)下载:https://*.jfglss.icu/3.jpg"
   ],
-  "icon_url": "https://*.jfglss.icu/icon.ico"
+  "icon_url": "https://a.jfglss.icu/icon.ico"
 }
